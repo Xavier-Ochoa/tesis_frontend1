@@ -77,8 +77,13 @@ export default function AdminUsers() {
       {/* Filters */}
       <div style={{ display: 'flex', gap: 8, marginBottom: '1.25rem', flexWrap: 'wrap', alignItems: 'center' }}>
         <input value={search}   onChange={e => setSearch(e.target.value)}   className="input" style={{ width: 180 }} placeholder="Buscar por apellido" />
-        <input value={carrera}  onChange={e => setCarrera(e.target.value)}  className="input" style={{ width: 220 }} placeholder="Filtrar por carrera" />
-        <input value={semestre} onChange={e => setSemestre(e.target.value)} type="number" min={1} max={8} className="input" style={{ width: 110 }} placeholder="Semestre" />
+        <select value={carrera} onChange={e => setCarrera(e.target.value)} className="input" style={{ width: 260 }}>
+          <option value="">Todas las carreras</option>
+          {['Agua y Saneamiento Ambiental','Desarrollo de Software','Electromecánica','Redes y Telecomunicaciones','Procesamiento de Alimentos','Procesamiento industrial de la madera'].map(c => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+        <input value={semestre} onChange={e => setSemestre(e.target.value)} type="number" min={0} max={5} className="input" style={{ width: 110 }} placeholder="Semestre" />
         <button onClick={fetchUsers} className="btn-primary btn-sm">Buscar</button>
         <button onClick={() => { setSearch(''); setCarrera(''); setSemestre(''); setTimeout(fetchUsers, 0) }} className="btn-secondary btn-sm">Limpiar</button>
       </div>
