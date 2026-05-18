@@ -84,7 +84,12 @@ export default function EditProject() {
           </div>
           <div>
             <label className="label">Carrera</label>
-            <input name="carrera" value={form.carrera} onChange={handle} className="input" />
+            <select name="carrera" value={form.carrera} onChange={handle} className="input">
+              <option value="">-- Selecciona una carrera --</option>
+              {['Agua y Saneamiento Ambiental','Desarrollo de Software','Electromecánica','Redes y Telecomunicaciones','Procesamiento de Alimentos','Procesamiento industrial de la madera'].map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
           </div>
         </div>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
