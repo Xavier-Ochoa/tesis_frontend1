@@ -242,8 +242,13 @@ export default function CreateProject() {
             </select>
           </div>
           <div>
-            <label className="label" style={{ display:'flex', alignItems:'center' }}>Carrera <FieldHint required text="Nombre completo de la carrera." /></label>
-            <input name="carrera" required value={form.carrera} onChange={handle} className="input" placeholder="Ing. en Software" />
+            <label className="label" style={{ display:'flex', alignItems:'center' }}>Carrera <FieldHint required text="Selecciona la carrera." /></label>
+            <select name="carrera" required value={form.carrera} onChange={handle} className="input">
+              <option value="">-- Selecciona una carrera --</option>
+              {['Agua y Saneamiento Ambiental','Desarrollo de Software','Electromecánica','Redes y Telecomunicaciones','Procesamiento de Alimentos','Procesamiento industrial de la madera'].map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
           </div>
         </div>
 
