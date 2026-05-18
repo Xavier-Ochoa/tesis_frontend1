@@ -69,13 +69,18 @@ export default function Register() {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: form.rol === 'estudiante' ? '1fr 1fr' : '1fr', gap: 12 }}>
               <div>
-                <label className="label" style={{ display: 'flex', alignItems: 'center' }}>Carrera <FieldHint text="Nombre completo de tu carrera." /></label>
-                <input name="carrera" value={form.carrera} onChange={handle} className="input" placeholder="Ing. en Software" />
+                <label className="label" style={{ display: 'flex', alignItems: 'center' }}>Carrera <FieldHint text="Selecciona tu carrera." /></label>
+                <select name="carrera" value={form.carrera} onChange={handle} className="input">
+                  <option value="">-- Selecciona una carrera --</option>
+                  {['Agua y Saneamiento Ambiental','Desarrollo de Software','Electromecánica','Redes y Telecomunicaciones','Procesamiento de Alimentos','Procesamiento industrial de la madera'].map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
               </div>
               {form.rol === 'estudiante' && (
                 <div>
-                  <label className="label" style={{ display: 'flex', alignItems: 'center' }}>Semestre <FieldHint text="Número del 1 al 8." /></label>
-                  <input name="semestre" type="number" min={1} max={8} value={form.semestre} onChange={handle} className="input" placeholder="1 - 8" />
+                  <label className="label" style={{ display: 'flex', alignItems: 'center' }}>Semestre <FieldHint text="Número del 0 al 5." /></label>
+                  <input name="semestre" type="number" min={0} max={5} value={form.semestre} onChange={handle} className="input" placeholder="0 - 5" />
                 </div>
               )}
             </div>
