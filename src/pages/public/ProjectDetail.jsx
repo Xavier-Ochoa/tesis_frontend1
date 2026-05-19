@@ -5,6 +5,31 @@ import { useAuth } from '../../context/AuthContext'
 import Spinner from '../../components/Spinner'
 import toast from 'react-hot-toast'
 
+// ── Galería con miniaturas ────────────────────────────────────────────────────
+function ImageGallery({ images, title }) {
+  const [active, setActive] = useState(0)
+  if (!images?.length) return null
+  return (
+    <div style={{ marginBottom:'1.5rem' }}>
+      {/* Imagen principal */}
+      <div style={{ height:300, borderRadius:20, overflow:'hidden', marginBottom:8, background:'var(--surface3)' }}>
+        <img src={images[active]} alt={title} style={{ width:'100%', height:'100%', objectFit:'cover', transition:'opacity 0.2s' }} />
+      </div>
+      {/* Miniaturas */}
+      {images.length > 1 && (
+        <div style={{ display:'flex', gap:8, overflowX:'auto', paddingBottom:4 }}>
+          {images.map((src, i) => (
+            <button key={i} type="button" onClick={() => setActive(i)}
+              style={{ width:72, height:54, borderRadius:10, overflow:'hidden', flexShrink:0, border:`2px solid ${active===i ? 'var(--primary)' : 'transparent'}`, padding:0, cursor:'pointer', transition:'border-color 0.15s' }}>
+              <img src={src} alt={`thumb-${i}`} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function ProjectDetail() {
   const { id } = useParams()
   const { user, isDocente } = useAuth()
@@ -78,10 +103,8 @@ export default function ProjectDetail() {
   return (
     <div className="page" style={{ animation: 'slideUp 0.4s ease-out' }}>
       {/* Hero image */}
-      {project.imagenes?.[0] ? (
-        <div style={{ height: 280, borderRadius: 20, overflow: 'hidden', marginBottom: '1.5rem' }}>
-          <img src={project.imagenes[0]} alt={project.titulo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        </div>
+      {project.imagenes?.length > 0 ? (
+        <ImageGallery images={project.imagenes} title={project.titulo} />
       ) : (
         <div style={{ height: 160, borderRadius: 20, marginBottom: '1.5rem', background: 'linear-gradient(135deg, var(--primary) 0%, #818cf8 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 30% 50%, rgba(255,255,255,0.1) 0%, transparent 60%)' }} />
