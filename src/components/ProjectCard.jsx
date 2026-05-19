@@ -33,9 +33,9 @@ export default function ProjectCard({ project }) {
       >
         {/* Image */}
         {imagenes?.[0] ? (
-          <div style={{ height: 160, overflow: 'hidden', flexShrink: 0 }}>
+          <div style={{ height: 160, overflow: 'hidden', flexShrink: 0, background: 'var(--surface2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <img src={imagenes[0]} alt={titulo}
-              style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s ease' }}
+              style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', transition: 'transform 0.4s ease' }}
               onMouseEnter={e => e.target.style.transform = 'scale(1.04)'}
               onMouseLeave={e => e.target.style.transform = 'scale(1)'}
             />
