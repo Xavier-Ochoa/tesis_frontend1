@@ -20,13 +20,30 @@ export default function AdminUsers() {
       if (carrera)  params.carrera  = carrera
       if (semestre) params.semestre = semestre
       const { data } = await api.get('/admin/estudiantes', { params })
-      setUsers(data.data || data.usuarios || [])
+      const lista = data.data || data.usuarios || []
+      setUsers(lista)
+      // Actualizar confirmados desde el listado (sin filtros activos)
+      if (!search && !carrera && !semestre) {
+        setStats(prev => prev ? { ...prev, confirmados: lista.filter(u => u.confirmEmail).length } : prev)
+      }
     } catch { setUsers([]) }
     finally { setLoading(false) }
   }
 
   useEffect(() => {
-    api.get('/admin/estudiantes/estadisticas').then(r => setStats(r.data?.data || r.data)).catch(() => {})
+    api.get('/admin/estudiantes/estadisticas')
+      .then(r => {
+        const raw = r.data?.data || r.data
+        // porRol ahora es objeto: { estudiante: N, docente: N, admin: N }
+        const porRol = raw.porRol || {}
+        setStats({
+          total:       raw.total        || 0,
+          estudiantes: porRol.estudiante || 0,
+          docentes:    porRol.docente    || 0,
+          confirmados: raw.confirmados  ?? null,
+        })
+      })
+      .catch(() => {})
     fetchUsers()
   }, [])
 
@@ -35,7 +52,7 @@ export default function AdminUsers() {
     const accion      = nuevoEstado === 'inactivo' ? 'suspender' : 'activar'
     if (!confirm(`¿Deseas ${accion} a ${user.nombre} ${user.apellido}?`)) return
     try {
-      await api.put(`/admin/estudiantes/${user._id}/estado`, { estado: nuevoEstado })
+      await api.patch(`/admin/estudiantes/${user._id}/estado`, { estado: nuevoEstado })
       toast.success(`Usuario ${nuevoEstado === 'inactivo' ? 'suspendido' : 'activado'} correctamente`)
       fetchUsers()
     } catch (err) {
