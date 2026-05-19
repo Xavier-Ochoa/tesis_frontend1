@@ -35,16 +35,17 @@ export default function Dashboard() {
       .then(r => {
         const raw = r.data?.data || r.data
         if (isAdmin) {
-          const porEstado = raw.porEstado || []
-          const getEstado = (e) => porEstado.find(x => x._id === e)?.total || 0
+          // Nueva estructura: data.proyectos.total, data.proyectos.porEstado.pendiente
+          const p = raw.proyectos || {}
+          const porEstado = p.porEstado || {}
           setStats({
-            totalProyectos:      raw.resumen?.totalProyectos || 0,
-            aprobados:           getEstado('aprobado'),
-            pendientes:          getEstado('pendiente'),
-            totalUsuarios:       raw.resumen?.totalUsuarios || '—',
+            totalProyectos: p.total             || 0,
+            aprobados:      porEstado.aprobado  || 0,
+            pendientes:     porEstado.pendiente || 0,
+            totalUsuarios:  raw.totalUsuarios   || '—',
           })
         } else {
-          // Backend devuelve: resumen.totalProyectos, resumen.totalVistas, resumen.totalLikes, porEstado
+          // Estructura usuario: resumen.totalProyectos, resumen.totalVistas, resumen.totalLikes, porEstado (array)
           const porEstado = raw.porEstado || []
           const getEstado = (e) => porEstado.find(x => x._id === e)?.total || 0
           setStats({
