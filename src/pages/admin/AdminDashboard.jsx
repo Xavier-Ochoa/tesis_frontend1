@@ -8,7 +8,22 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.get('/dashboard/admin').then(r => setStats(r.data?.data || r.data)).catch(() => {}).finally(() => setLoading(false))
+    api.get('/dashboard/admin')
+      .then(r => {
+        const raw = r.data?.data || r.data
+        // Nueva estructura: data.proyectos.total, data.proyectos.porEstado.pendiente
+        const p = raw.proyectos || {}
+        const porEstado = p.porEstado || {}
+        setStats({
+          totalProyectos:      p.total              || 0,
+          proyectosAprobados:  porEstado.aprobado   || 0,
+          proyectosPendientes: porEstado.pendiente  || 0,
+          proyectosRechazados: porEstado.rechazado  || 0,
+          totalUsuarios:       raw.totalUsuarios    || '—',
+        })
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
   }, [])
 
   if (loading) return <Spinner />
