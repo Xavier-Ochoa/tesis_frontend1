@@ -95,7 +95,9 @@ export default function ProjectDetail() {
   if (loading) return <Spinner />
   if (!project) return <div style={{ textAlign: 'center', padding: '5rem', color: 'var(--text-3)' }}>Proyecto no encontrado</div>
 
-  const isAuthor = user?._id === (project.autor?._id || project.autor)
+  const isAuthor       = user?._id === (project.autor?._id || project.autor)
+  const isColaborador  = !isAuthor && colabs.some(c => (c._id || c) === user?._id)
+  const puedeEditar    = isAuthor || isColaborador
   const estadoConfig = { aprobado: { label: 'Aprobado', cls: 'badge-green' }, pendiente: { label: 'Pendiente', cls: 'badge-yellow' }, rechazado: { label: 'Rechazado', cls: 'badge-red' } }
   const ec = estadoConfig[project.estado] || { label: project.estado, cls: 'badge-gray' }
   const likes = project.likes || []
@@ -139,7 +141,11 @@ export default function ProjectDetail() {
             </button>
             {project.repositorio && <a href={project.repositorio} target="_blank" rel="noreferrer" className="btn-secondary btn-sm">🔗 Repositorio</a>}
             {project.enlaceDemo  && <a href={project.enlaceDemo}  target="_blank" rel="noreferrer" className="btn-primary btn-sm">🚀 Demo</a>}
-            {isAuthor && <Link to={`/mis-proyectos/editar/${id}`} className="btn-secondary btn-sm">✏️ Editar</Link>}
+            {puedeEditar && (
+              <Link to={`/mis-proyectos/editar/${id}`} className="btn-secondary btn-sm">
+                {isColaborador ? '👥 Editar (colaborador)' : '✏️ Editar'}
+              </Link>
+            )}
           </div>
 
           {/* Tech */}
