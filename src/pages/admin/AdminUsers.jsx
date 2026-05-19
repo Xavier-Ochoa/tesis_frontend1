@@ -77,13 +77,8 @@ export default function AdminUsers() {
       {/* Filters */}
       <div style={{ display: 'flex', gap: 8, marginBottom: '1.25rem', flexWrap: 'wrap', alignItems: 'center' }}>
         <input value={search}   onChange={e => setSearch(e.target.value)}   className="input" style={{ width: 180 }} placeholder="Buscar por apellido" />
-        <select value={carrera} onChange={e => setCarrera(e.target.value)} className="input" style={{ width: 260 }}>
-          <option value="">Todas las carreras</option>
-          {['Agua y Saneamiento Ambiental','Desarrollo de Software','Electromecánica','Redes y Telecomunicaciones','Procesamiento de Alimentos','Procesamiento industrial de la madera'].map(c => (
-            <option key={c} value={c}>{c}</option>
-          ))}
-        </select>
-        <input value={semestre} onChange={e => setSemestre(e.target.value)} type="number" min={0} max={5} className="input" style={{ width: 110 }} placeholder="Semestre" />
+        <input value={carrera}  onChange={e => setCarrera(e.target.value)}  className="input" style={{ width: 220 }} placeholder="Filtrar por carrera" />
+        <input value={semestre} onChange={e => setSemestre(e.target.value)} type="number" min={1} max={8} className="input" style={{ width: 110 }} placeholder="Semestre" />
         <button onClick={fetchUsers} className="btn-primary btn-sm">Buscar</button>
         <button onClick={() => { setSearch(''); setCarrera(''); setSemestre(''); setTimeout(fetchUsers, 0) }} className="btn-secondary btn-sm">Limpiar</button>
       </div>
@@ -99,7 +94,7 @@ export default function AdminUsers() {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
                   <tr style={{ background: 'var(--surface2)', borderBottom: '1px solid var(--border)' }}>
-                    {['Usuario', 'Carrera', 'Sem.', 'Rol', 'Email', 'Estado', 'Acciones'].map(h => (
+                    {['Usuario', 'Carrera', 'Sem.', 'Rol', 'Confirmación', 'Estado', 'Acciones'].map(h => (
                       <th key={h} style={{ textAlign: 'left', padding: '10px 14px', fontWeight: 600, color: 'var(--text-2)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>{h}</th>
                     ))}
                   </tr>
@@ -159,7 +154,9 @@ export default function AdminUsers() {
                         {/* Acciones */}
                         <td style={{ padding: '12px 14px' }}>
                           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                            <Link to={`/proyectos/estudiante/${u._id}`} style={{ fontSize: 11, color: 'var(--primary)', fontWeight: 600, textDecoration: 'none', padding: '3px 8px', borderRadius: 6, background: 'var(--primary-l)', border: '1px solid var(--primary)', whiteSpace: 'nowrap' }}>
+                            <Link
+                              to={`/admin/proyectos?autor=${u._id}`}
+                              style={{ fontSize: 11, color: 'var(--primary)', fontWeight: 600, textDecoration: 'none', padding: '3px 8px', borderRadius: 6, background: 'var(--primary-l)', border: '1px solid var(--primary)', whiteSpace: 'nowrap' }}>
                               Proyectos →
                             </Link>
                             {u.rol !== 'admin' && (
