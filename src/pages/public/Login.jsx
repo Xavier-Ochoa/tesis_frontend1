@@ -17,9 +17,12 @@ export default function Login() {
     setLoading(true)
     try {
       const { data } = await api.post('/auth/login', form)
-      login(data.usuario || data, data.token)
+      // Manejar ambos formatos: { usuario, token } o todo en el objeto raíz
+      const usuario = data.usuario || data
+      const jwt = data.token || data.usuario?.token
+      login(usuario, jwt)
       toast.success('¡Bienvenido!')
-      navigate(data.usuario?.rol === 'admin' ? '/admin' : '/dashboard')
+      navigate(usuario?.rol === 'admin' ? '/admin' : '/dashboard')
     } catch (err) {
       toast.error(err.response?.data?.msg || 'Credenciales incorrectas')
     } finally {
