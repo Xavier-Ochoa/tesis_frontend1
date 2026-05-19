@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import api from '../../api/axios'
 import Spinner from '../../components/Spinner'
 import toast from 'react-hot-toast'
@@ -11,15 +11,31 @@ const estadoConfig = {
 }
 
 export default function AdminProjects() {
+  const [searchParams]            = useSearchParams()
+  const autorParam                = searchParams.get('autor') || ''
+  const [autorNombre, setAutorNombre] = useState('')
+
   const [projects, setProjects]   = useState([])
   const [loading, setLoading]     = useState(true)
   const [filtro, setFiltro]       = useState('')
   const [categoria, setCategoria] = useState('')
+  const [autor, setAutor]         = useState(autorParam)
   const [page, setPage]           = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [editModal, setEditModal] = useState(null)
   const [rejectModal, setRejectModal] = useState(null)
   const [saving, setSaving]       = useState(false)
+
+  // Si viene ?autor=id desde AdminUsers, buscar el nombre para mostrarlo
+  useEffect(() => {
+    if (!autorParam) return
+    api.get(`/admin/estudiantes/${autorParam}`)
+      .then(r => {
+        const u = r.data?.data || r.data
+        setAutorNombre(`${u.nombre} ${u.apellido}`)
+      })
+      .catch(() => {})
+  }, [autorParam])
 
   const fetchProjects = async () => {
     setLoading(true)
@@ -27,6 +43,7 @@ export default function AdminProjects() {
       const params = { page, limit: 12 }
       if (filtro)    params.estado    = filtro
       if (categoria) params.categoria = categoria
+      if (autor)     params.autor     = autor
       const { data } = await api.get('/admin/proyectos', { params })
       setProjects(data.data || [])
       setTotalPages(data.pagination?.totalPages || 1)
@@ -34,7 +51,7 @@ export default function AdminProjects() {
     finally { setLoading(false) }
   }
 
-  useEffect(() => { fetchProjects() }, [page, filtro, categoria])
+  useEffect(() => { fetchProjects() }, [page, filtro, categoria, autor])
 
   const approve = async (id) => {
     try { await api.put(`/admin/proyectos/${id}/aprobar`); toast.success('Proyecto aprobado'); fetchProjects() }
@@ -76,6 +93,20 @@ export default function AdminProjects() {
         </div>
         <Link to="/admin" className="btn-secondary btn-sm">← Admin</Link>
       </div>
+
+      {/* Banner cuando se filtra por autor */}
+      {autor && (
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', background:'var(--primary-l)', border:'1px solid var(--primary)', borderRadius:10, padding:'10px 14px', marginBottom:'1rem', fontSize:13 }}>
+          <span style={{ color:'var(--primary)', fontWeight:600 }}>
+            👤 Mostrando proyectos de: <strong>{autorNombre || autor}</strong>
+          </span>
+          <button
+            onClick={() => { setAutor(''); setPage(1) }}
+            style={{ background:'none', border:'none', cursor:'pointer', color:'var(--primary)', fontWeight:700, fontSize:12, padding:'2px 8px', borderRadius:6, border:'1px solid var(--primary)' }}>
+            × Ver todos
+          </button>
+        </div>
+      )}
 
       {/* Filters */}
       <div style={{ display:'flex', gap:8, marginBottom:'1.5rem', flexWrap:'wrap' }}>
