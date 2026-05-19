@@ -11,15 +11,23 @@ export default function AdminDashboard() {
     api.get('/dashboard/admin')
       .then(r => {
         const raw = r.data?.data || r.data
-        // Nueva estructura: data.proyectos.total, data.proyectos.porEstado.pendiente
-        const p = raw.proyectos || {}
-        const porEstado = p.porEstado || {}
+
+        // El backend devuelve:
+        //   raw.resumen.totalProyectos
+        //   raw.resumen.totalPublicados
+        //   raw.resumen.totalDonaciones
+        //   raw.porEstado  → array [{ _id: 'aprobado', total: N }, ...]
+        // NO existe raw.proyectos ni raw.totalUsuarios
+
+        const getEstado = (estado) =>
+          (raw.porEstado || []).find(x => x._id === estado)?.total || 0
+
         setStats({
-          totalProyectos:      p.total              || 0,
-          proyectosAprobados:  porEstado.aprobado   || 0,
-          proyectosPendientes: porEstado.pendiente  || 0,
-          proyectosRechazados: porEstado.rechazado  || 0,
-          totalUsuarios:       raw.totalUsuarios    || '—',
+          totalProyectos:      raw.resumen?.totalProyectos  || 0,
+          proyectosAprobados:  getEstado('aprobado'),
+          proyectosPendientes: getEstado('pendiente'),
+          proyectosRechazados: getEstado('rechazado'),
+          totalDonaciones:     raw.resumen?.totalDonaciones || 0,
         })
       })
       .catch(() => {})
@@ -30,9 +38,9 @@ export default function AdminDashboard() {
 
   const cards = stats ? [
     { icon: '📁', label: 'Total proyectos', value: stats.totalProyectos,      color: '#6366f1', bg: 'rgba(99,102,241,0.1)' },
-    { icon: '✅', label: 'Aprobados',        value: stats.proyectosAprobados || stats.proyectosPublicados,  color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
-    { icon: '⏳', label: 'Pendientes',       value: stats.proyectosPendientes || stats.proyectosEnProgreso, color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
-    { icon: '👥', label: 'Total usuarios',   value: stats.totalUsuarios,       color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
+    { icon: '✅', label: 'Aprobados',        value: stats.proyectosAprobados,  color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
+    { icon: '⏳', label: 'Pendientes',       value: stats.proyectosPendientes, color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+    { icon: '💰', label: 'Total donaciones', value: `$${stats.totalDonaciones}`, color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
   ] : []
 
   return (
