@@ -34,20 +34,28 @@ export default function Dashboard() {
     api.get(endpoint)
       .then(r => {
         const raw = r.data?.data || r.data
+
         if (isAdmin) {
-          // Nueva estructura: data.proyectos.total, data.proyectos.porEstado.pendiente
-          const p = raw.proyectos || {}
-          const porEstado = p.porEstado || {}
+          // El backend devuelve:
+          //   raw.resumen.totalProyectos
+          //   raw.resumen.totalPublicados
+          //   raw.resumen.totalDonaciones
+          //   raw.porEstado → array [{ _id: 'aprobado', total: N }, ...]
+          // NO existe raw.proyectos ni raw.totalUsuarios
+          const getEstado = (estado) =>
+            (raw.porEstado || []).find(x => x._id === estado)?.total || 0
+
           setStats({
-            totalProyectos: p.total             || 0,
-            aprobados:      porEstado.aprobado  || 0,
-            pendientes:     porEstado.pendiente || 0,
-            totalUsuarios:  raw.totalUsuarios   || '—',
+            totalProyectos:  raw.resumen?.totalProyectos  || 0,
+            aprobados:       getEstado('aprobado'),
+            pendientes:      getEstado('pendiente'),
+            totalDonaciones: raw.resumen?.totalDonaciones || 0,
           })
         } else {
           // Estructura usuario: resumen.totalProyectos, resumen.totalVistas, resumen.totalLikes, porEstado (array)
-          const porEstado = raw.porEstado || []
-          const getEstado = (e) => porEstado.find(x => x._id === e)?.total || 0
+          const getEstado = (estado) =>
+            (raw.porEstado || []).find(x => x._id === estado)?.total || 0
+
           setStats({
             totalProyectos: raw.resumen?.totalProyectos || 0,
             aprobados:      getEstado('aprobado'),
@@ -83,15 +91,15 @@ export default function Dashboard() {
       {stats && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14, marginBottom: '2.5rem' }}>
           {isAdmin ? (<>
-            <StatCard icon="📁" label="Total proyectos"  value={stats.totalProyectos}  color="indigo" />
-            <StatCard icon="✅" label="Aprobados"          value={stats.aprobados}       color="green" />
-            <StatCard icon="⏳" label="Pendientes"         value={stats.pendientes}      color="amber" />
-            <StatCard icon="👥" label="Total usuarios"     value={stats.totalUsuarios}   color="rose" />
+            <StatCard icon="📁" label="Total proyectos"  value={stats.totalProyectos}              color="indigo" />
+            <StatCard icon="✅" label="Aprobados"          value={stats.aprobados}                   color="green" />
+            <StatCard icon="⏳" label="Pendientes"         value={stats.pendientes}                  color="amber" />
+            <StatCard icon="💰" label="Total donaciones"   value={`$${stats.totalDonaciones}`}       color="rose" />
           </>) : (<>
-            <StatCard icon="📁" label="Mis proyectos"     value={stats.totalProyectos}      color="indigo" />
-            <StatCard icon="✅" label="Aprobados"          value={stats.aprobados || stats.publicados}           color="green" />
-            <StatCard icon="❤️" label="Likes recibidos"   value={stats.totalLikes}          color="rose" />
-            <StatCard icon="👁️" label="Vistas totales"    value={stats.totalVistas}         color="amber" />
+            <StatCard icon="📁" label="Mis proyectos"     value={stats.totalProyectos}  color="indigo" />
+            <StatCard icon="✅" label="Aprobados"          value={stats.aprobados}       color="green" />
+            <StatCard icon="❤️" label="Likes recibidos"   value={stats.totalLikes}      color="rose" />
+            <StatCard icon="👁️" label="Vistas totales"    value={stats.totalVistas}     color="amber" />
           </>)}
         </div>
       )}
