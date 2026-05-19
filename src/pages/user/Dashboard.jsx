@@ -31,7 +31,32 @@ export default function Dashboard() {
 
   useEffect(() => {
     const endpoint = isAdmin ? '/dashboard/admin' : '/dashboard/usuario'
-    api.get(endpoint).then(r => setStats(r.data?.data || r.data)).catch(() => setStats(null)).finally(() => setLoading(false))
+    api.get(endpoint)
+      .then(r => {
+        const raw = r.data?.data || r.data
+        if (isAdmin) {
+          const porEstado = raw.porEstado || []
+          const getEstado = (e) => porEstado.find(x => x._id === e)?.total || 0
+          setStats({
+            totalProyectos:      raw.resumen?.totalProyectos || 0,
+            aprobados:           getEstado('aprobado'),
+            pendientes:          getEstado('pendiente'),
+            totalUsuarios:       raw.resumen?.totalUsuarios || '—',
+          })
+        } else {
+          // Backend devuelve: resumen.totalProyectos, resumen.totalVistas, resumen.totalLikes, porEstado
+          const porEstado = raw.porEstado || []
+          const getEstado = (e) => porEstado.find(x => x._id === e)?.total || 0
+          setStats({
+            totalProyectos: raw.resumen?.totalProyectos || 0,
+            aprobados:      getEstado('aprobado'),
+            totalLikes:     raw.resumen?.totalLikes     || 0,
+            totalVistas:    raw.resumen?.totalVistas    || 0,
+          })
+        }
+      })
+      .catch(() => setStats(null))
+      .finally(() => setLoading(false))
   }, [isAdmin])
 
   if (loading) return <Spinner />
@@ -57,10 +82,10 @@ export default function Dashboard() {
       {stats && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14, marginBottom: '2.5rem' }}>
           {isAdmin ? (<>
-            <StatCard icon="📁" label="Total proyectos"  value={stats.totalProyectos}      color="indigo" />
-            <StatCard icon="✅" label="Aprobados"         value={stats.proyectosAprobados || stats.proyectosPublicados}  color="green" />
-            <StatCard icon="⏳" label="Pendientes"        value={stats.proyectosPendientes || stats.proyectosEnProgreso} color="amber" />
-            <StatCard icon="👥" label="Total usuarios"    value={stats.totalUsuarios}       color="rose" />
+            <StatCard icon="📁" label="Total proyectos"  value={stats.totalProyectos}  color="indigo" />
+            <StatCard icon="✅" label="Aprobados"          value={stats.aprobados}       color="green" />
+            <StatCard icon="⏳" label="Pendientes"         value={stats.pendientes}      color="amber" />
+            <StatCard icon="👥" label="Total usuarios"     value={stats.totalUsuarios}   color="rose" />
           </>) : (<>
             <StatCard icon="📁" label="Mis proyectos"     value={stats.totalProyectos}      color="indigo" />
             <StatCard icon="✅" label="Aprobados"          value={stats.aprobados || stats.publicados}           color="green" />
