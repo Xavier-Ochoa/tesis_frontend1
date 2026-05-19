@@ -4,13 +4,14 @@ import api from '../../api/axios'
 import toast from 'react-hot-toast'
 import FieldHint from '../../components/FieldHint'
 
+const MAX_IMAGENES = 5
 const defaultForm = {
   titulo:'', descripcion:'', categoria:'academico', fechaInicio:'',
   fechaFin:'', carrera:'', tecnologias:'', repositorio:'', enlaceDemo:'',
   asignatura:'', tags:'', nivel:'', publico:'false',
 }
 
-// ── Modal de sugerencias IA ─────────────────────────────────────────────────
+// ── Modal IA ──────────────────────────────────────────────────────────────────
 function AIModal({ descripcion, onSelect, onClose }) {
   const [titulos, setTitulos]   = useState([])
   const [loading, setLoading]   = useState(false)
@@ -29,25 +30,16 @@ function AIModal({ descripcion, onSelect, onClose }) {
       if (lista.length === 0) { setError('La IA no devolvió sugerencias. Intenta de nuevo.'); return }
       setTitulos(lista)
     } catch (err) {
-      setError(err.response?.data?.message || 'Error al conectar con la IA. Verifica HF_API_KEY en el backend.')
+      setError(err.response?.data?.message || 'Error al conectar con la IA.')
     } finally { setLoading(false) }
   }
 
-  // Generar automáticamente al abrir el modal
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { generar() }, [])
 
   return (
-    <div
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
-      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.65)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}
-    >
-      <div style={{
-        background:'var(--surface)', border:'1px solid var(--border)', borderRadius:20,
-        width:'100%', maxWidth:480, padding:'1.75rem', boxShadow:'var(--shadow-lg)',
-        animation:'slideUp 0.2s ease-out',
-      }}>
-        {/* Header */}
+    <div onClick={e => { if (e.target === e.currentTarget) onClose() }}
+      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.65)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
+      <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:20, width:'100%', maxWidth:480, padding:'1.75rem', boxShadow:'var(--shadow-lg)', animation:'slideUp 0.2s ease-out' }}>
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'1.25rem' }}>
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
             <span style={{ fontSize:22 }}>🤖</span>
@@ -59,7 +51,6 @@ function AIModal({ descripcion, onSelect, onClose }) {
           <button onClick={onClose} style={{ background:'none', border:'none', fontSize:20, cursor:'pointer', color:'var(--text-3)', lineHeight:1, padding:'4px' }}>×</button>
         </div>
 
-        {/* Body */}
         {loading && (
           <div style={{ textAlign:'center', padding:'2rem 0' }}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" style={{ animation:'spin 0.75s linear infinite', margin:'0 auto 10px', display:'block' }}>
@@ -72,25 +63,19 @@ function AIModal({ descripcion, onSelect, onClose }) {
         )}
 
         {error && !loading && (
-          <div style={{ background:'var(--danger-l)', border:'1px solid var(--danger)', borderRadius:10, padding:'12px 14px', fontSize:13, color:'var(--danger)', marginBottom:14 }}>
-            {error}
-          </div>
+          <div style={{ background:'var(--danger-l)', border:'1px solid var(--danger)', borderRadius:10, padding:'12px 14px', fontSize:13, color:'var(--danger)', marginBottom:14 }}>{error}</div>
         )}
 
         {titulos.length > 0 && !loading && (
           <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:'1.25rem' }}>
             {titulos.map((t, i) => (
-              <button
-                key={i}
-                onClick={() => setSelected(t)}
-                style={{
-                  width:'100%', textAlign:'left', padding:'12px 14px', borderRadius:12, cursor:'pointer',
-                  fontSize:14, fontWeight:500, fontFamily:'inherit', transition:'all 0.15s',
-                  background: selected===t ? 'var(--primary-l)' : 'var(--surface2)',
-                  color: selected===t ? 'var(--primary)' : 'var(--text-1)',
-                  border: `1.5px solid ${selected===t ? 'var(--primary)' : 'var(--border)'}`,
-                }}
-              >
+              <button key={i} onClick={() => setSelected(t)} style={{
+                width:'100%', textAlign:'left', padding:'12px 14px', borderRadius:12, cursor:'pointer',
+                fontSize:14, fontWeight:500, fontFamily:'inherit', transition:'all 0.15s',
+                background: selected===t ? 'var(--primary-l)' : 'var(--surface2)',
+                color: selected===t ? 'var(--primary)' : 'var(--text-1)',
+                border: `1.5px solid ${selected===t ? 'var(--primary)' : 'var(--border)'}`,
+              }}>
                 <span style={{ fontSize:11, fontWeight:700, color:'var(--text-3)', display:'block', marginBottom:3 }}>Opción {i+1}</span>
                 {t}
               </button>
@@ -98,47 +83,43 @@ function AIModal({ descripcion, onSelect, onClose }) {
           </div>
         )}
 
-        {/* Footer */}
         <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-          <button
-            onClick={() => { if (selected) { onSelect(selected); onClose() } else toast.error('Selecciona una opción primero') }}
-            disabled={!selected || loading}
-            className="btn-primary"
-            style={{ flex:1 }}
-          >
-            Usar este título
-          </button>
-          <button
-            onClick={generar}
-            disabled={loading}
-            className="btn-secondary"
-            style={{ flex:1 }}
-          >
-            {loading ? 'Generando...' : '🔄 Regenerar'}
-          </button>
-          <button onClick={onClose} className="btn-ghost" style={{ width:'100%', marginTop:2 }}>
-            Cancelar
-          </button>
+          <button onClick={() => { if (selected) { onSelect(selected); onClose() } else toast.error('Selecciona una opción') }} disabled={!selected || loading} className="btn-primary" style={{ flex:1 }}>Usar este título</button>
+          <button onClick={generar} disabled={loading} className="btn-secondary" style={{ flex:1 }}>{loading ? 'Generando...' : '🔄 Regenerar'}</button>
+          <button onClick={onClose} className="btn-ghost" style={{ width:'100%', marginTop:2 }}>Cancelar</button>
         </div>
       </div>
     </div>
   )
 }
 
-// ── Formulario ───────────────────────────────────────────────────────────────
+// ── Formulario ────────────────────────────────────────────────────────────────
 export default function CreateProject() {
   const navigate = useNavigate()
   const [form, setForm]         = useState(defaultForm)
-  const [image, setImage]       = useState(null)
-  const [preview, setPreview]   = useState(null)
+  const [images, setImages]     = useState([])       // File[]
+  const [previews, setPreviews] = useState([])       // string[] (object URLs)
   const [loading, setLoading]   = useState(false)
   const [showAI, setShowAI]     = useState(false)
 
   const handle = e => setForm({ ...form, [e.target.name]: e.target.value })
-  const handleImage = e => {
-    const f = e.target.files[0]
-    if (!f) return
-    setImage(f); setPreview(URL.createObjectURL(f))
+
+  const handleImages = e => {
+    const files = Array.from(e.target.files || [])
+    const total = images.length + files.length
+    if (total > MAX_IMAGENES) {
+      toast.error(`Máximo ${MAX_IMAGENES} imágenes. Ya tienes ${images.length}.`)
+      return
+    }
+    const nuevas = files.slice(0, MAX_IMAGENES - images.length)
+    setImages(prev => [...prev, ...nuevas])
+    setPreviews(prev => [...prev, ...nuevas.map(f => URL.createObjectURL(f))])
+    e.target.value = ''
+  }
+
+  const removeImage = (idx) => {
+    setImages(prev => prev.filter((_, i) => i !== idx))
+    setPreviews(prev => prev.filter((_, i) => i !== idx))
   }
 
   const submit = async e => {
@@ -146,7 +127,7 @@ export default function CreateProject() {
     try {
       const fd = new FormData()
       Object.entries(form).forEach(([k, v]) => { if (v !== '') fd.append(k, v) })
-      if (image) fd.append('imagen', image)
+      images.forEach(img => fd.append('imagenes', img))
       const { data } = await api.post('/proyectos', fd)
       toast.success('Proyecto creado. Pendiente de revisión.')
       navigate(`/proyectos/${data.data?._id || data._id}`)
@@ -158,7 +139,7 @@ export default function CreateProject() {
   }
 
   return (
-    <div className="page" style={{ maxWidth: 680, animation: 'slideUp 0.4s ease-out' }}>
+    <div className="page" style={{ maxWidth:680, animation:'slideUp 0.4s ease-out' }}>
       <div style={{ marginBottom:'1.75rem' }}>
         <h1 style={{ fontFamily:'Syne,sans-serif', fontSize:26, fontWeight:800, color:'var(--text-1)', margin:'0 0 4px', letterSpacing:'-0.03em' }}>Nuevo Proyecto</h1>
         <p style={{ fontSize:13, color:'var(--text-3)', margin:0 }}>El proyecto quedará pendiente de aprobación por el administrador.</p>
@@ -166,69 +147,70 @@ export default function CreateProject() {
 
       <form onSubmit={submit} style={{ display:'flex', flexDirection:'column', gap:'1.25rem' }}>
 
-        {/* Imagen */}
+        {/* ── Galería de imágenes ── */}
         <div>
-          <label className="label" style={{ display:'flex', alignItems:'center' }}>Imagen <FieldHint text="JPG o PNG. Opcional." /></label>
-          <div onClick={() => document.getElementById('img').click()} style={{
-            border:`2px dashed ${preview ? 'var(--primary)' : 'var(--border2)'}`,
-            borderRadius:14, overflow:'hidden', cursor:'pointer', transition:'border-color 0.2s',
-            background:'var(--surface2)', minHeight:100, display:'flex', alignItems:'center', justifyContent:'center',
-          }}>
-            {preview
-              ? <img src={preview} alt="preview" style={{ width:'100%', height:160, objectFit:'cover' }} />
-              : <div style={{ textAlign:'center', padding:'2rem' }}>
-                  <p style={{ fontSize:28, marginBottom:4 }}>🖼️</p>
-                  <p style={{ fontSize:13, color:'var(--text-3)', margin:0 }}>Haz clic para subir</p>
+          <label className="label" style={{ display:'flex', alignItems:'center' }}>
+            Imágenes del proyecto
+            <FieldHint text={`Hasta ${MAX_IMAGENES} imágenes. JPG, PNG o WEBP, máx 5MB cada una.`} />
+            <span style={{ marginLeft:'auto', fontSize:11, color:'var(--text-3)', fontWeight:400 }}>
+              {images.length}/{MAX_IMAGENES}
+            </span>
+          </label>
+
+          {/* Miniaturas */}
+          {previews.length > 0 && (
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(100px, 1fr))', gap:8, marginBottom:10 }}>
+              {previews.map((src, i) => (
+                <div key={i} style={{ position:'relative', borderRadius:10, overflow:'hidden', aspectRatio:'1', border:'1px solid var(--border)' }}>
+                  <img src={src} alt={`img-${i}`} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                  <button type="button" onClick={() => removeImage(i)}
+                    style={{ position:'absolute', top:4, right:4, width:20, height:20, borderRadius:'50%', background:'rgba(0,0,0,0.7)', color:'white', border:'none', cursor:'pointer', fontSize:12, display:'flex', alignItems:'center', justifyContent:'center', lineHeight:1 }}>
+                    ×
+                  </button>
+                  {i === 0 && (
+                    <span style={{ position:'absolute', bottom:4, left:4, fontSize:9, fontWeight:700, background:'var(--primary)', color:'white', padding:'2px 5px', borderRadius:4 }}>PORTADA</span>
+                  )}
                 </div>
-            }
-          </div>
-          <input id="img" type="file" accept="image/*" style={{ display:'none' }} onChange={handleImage} />
+              ))}
+            </div>
+          )}
+
+          {/* Botón agregar */}
+          {images.length < MAX_IMAGENES && (
+            <div onClick={() => document.getElementById('imgs-create').click()}
+              style={{ border:`2px dashed var(--border2)`, borderRadius:12, padding:'1.25rem', textAlign:'center', cursor:'pointer', background:'var(--surface2)', transition:'border-color 0.2s' }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary)'}
+              onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border2)'}
+            >
+              <p style={{ fontSize:24, margin:'0 0 4px' }}>🖼️</p>
+              <p style={{ fontSize:13, color:'var(--text-3)', margin:0 }}>
+                {images.length === 0 ? 'Haz clic para agregar imágenes' : `Agregar más (${MAX_IMAGENES - images.length} restantes)`}
+              </p>
+            </div>
+          )}
+          <input id="imgs-create" type="file" accept="image/*" multiple style={{ display:'none' }} onChange={handleImages} />
         </div>
 
-        {/* Título + botón IA */}
+        {/* Título + IA */}
         <div>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
             <label className="label" style={{ display:'flex', alignItems:'center', margin:0 }}>
               Título <FieldHint required text="Entre 5 y 200 caracteres." />
             </label>
-            <button
-              type="button"
-              onClick={() => {
-                if (!form.descripcion || form.descripcion.trim().length < 15) {
-                  toast.error('Escribe primero la descripción (mín. 15 caracteres) para que la IA genere sugerencias.')
-                  return
-                }
-                setShowAI(true)
-              }}
-              style={{
-                display:'flex', alignItems:'center', gap:5,
-                fontSize:12, fontWeight:600, color:'var(--primary)',
-                background:'var(--primary-l)', border:'1px solid var(--primary)',
-                borderRadius:8, padding:'4px 10px', cursor:'pointer', transition:'all 0.15s',
-              }}
-              title="Generar título con IA (escribe la descripción primero)"
-            >
+            <button type="button" onClick={() => {
+              if (!form.descripcion || form.descripcion.trim().length < 15) { toast.error('Escribe la descripción primero (mín. 15 caracteres).'); return }
+              setShowAI(true)
+            }} style={{ display:'flex', alignItems:'center', gap:5, fontSize:12, fontWeight:600, color:'var(--primary)', background:'var(--primary-l)', border:'1px solid var(--primary)', borderRadius:8, padding:'4px 10px', cursor:'pointer' }}>
               ✨ Sugerir con IA
             </button>
           </div>
-          <input
-            name="titulo"
-            required
-            value={form.titulo}
-            onChange={handle}
-            className="input"
-            placeholder="Nombre del proyecto — o usa IA para sugerir ↑"
-          />
+          <input name="titulo" required value={form.titulo} onChange={handle} className="input" placeholder="Nombre del proyecto — o usa IA ↑" />
         </div>
 
         {/* Descripción */}
         <div>
-          <label className="label" style={{ display:'flex', alignItems:'center' }}>
-            Descripción <FieldHint required text="Entre 20 y 2000 caracteres. La IA usa este texto para sugerir títulos." />
-          </label>
-          <textarea name="descripcion" required value={form.descripcion} onChange={handle} rows={4}
-            className="input" style={{ resize:'none' }}
-            placeholder="Describe tu proyecto... (la IA usará esto para sugerir un título)" />
+          <label className="label" style={{ display:'flex', alignItems:'center' }}>Descripción <FieldHint required text="Entre 20 y 2000 caracteres. La IA usa este texto para sugerir títulos." /></label>
+          <textarea name="descripcion" required value={form.descripcion} onChange={handle} rows={4} className="input" style={{ resize:'none' }} placeholder="Describe tu proyecto..." />
           <p style={{ fontSize:11, color:'var(--text-3)', marginTop:3 }}>{form.descripcion.length}/2000</p>
         </div>
 
@@ -242,12 +224,15 @@ export default function CreateProject() {
             </select>
           </div>
           <div>
-            <label className="label" style={{ display:'flex', alignItems:'center' }}>Carrera <FieldHint required text="Selecciona la carrera." /></label>
+            <label className="label" style={{ display:'flex', alignItems:'center' }}>Carrera <FieldHint required text="Selecciona la carrera a la que pertenece el proyecto." /></label>
             <select name="carrera" required value={form.carrera} onChange={handle} className="input">
-              <option value="">-- Selecciona una carrera --</option>
-              {['Agua y Saneamiento Ambiental','Desarrollo de Software','Electromecánica','Redes y Telecomunicaciones','Procesamiento de Alimentos','Procesamiento industrial de la madera'].map(c => (
-                <option key={c} value={c}>{c}</option>
-              ))}
+              <option value="">Selecciona una carrera</option>
+              <option>Agua y Saneamiento Ambiental</option>
+              <option>Desarrollo de Software</option>
+              <option>Electromecánica</option>
+              <option>Redes y Telecomunicaciones</option>
+              <option>Procesamiento de Alimentos</option>
+              <option>Procesamiento Industrial de la Madera</option>
             </select>
           </div>
         </div>
@@ -279,7 +264,7 @@ export default function CreateProject() {
         {/* Repositorio + Demo */}
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
           <div>
-            <label className="label" style={{ display:'flex', alignItems:'center' }}>Repositorio <FieldHint text="URL completa. Ej: https://github.com/..." /></label>
+            <label className="label" style={{ display:'flex', alignItems:'center' }}>Repositorio <FieldHint text="URL completa." /></label>
             <input name="repositorio" type="url" value={form.repositorio} onChange={handle} className="input" placeholder="https://github.com/..." />
           </div>
           <div>
@@ -295,7 +280,7 @@ export default function CreateProject() {
             <input name="nivel" type="number" min={1} max={6} value={form.nivel} onChange={handle} className="input" placeholder="1 - 6" />
           </div>
           <div>
-            <label className="label" style={{ display:'flex', alignItems:'center' }}>¿Público? <FieldHint text="Público: visible para todos si está aprobado. Privado: solo tú." /></label>
+            <label className="label" style={{ display:'flex', alignItems:'center' }}>¿Público? <FieldHint text="Público: visible si está aprobado. Privado: solo tú." /></label>
             <select name="publico" value={form.publico} onChange={handle} className="input">
               <option value="false">🔒 Privado</option>
               <option value="true">🌐 Público</option>
@@ -309,18 +294,12 @@ export default function CreateProject() {
           <input name="tags" value={form.tags} onChange={handle} className="input" placeholder="iot, python, redes" />
         </div>
 
-        {/* Submit */}
         <div style={{ display:'flex', gap:10, paddingTop:4 }}>
-          <button type="submit" disabled={loading} className="btn-primary btn-lg" style={{ flex:1 }}>
-            {loading ? 'Creando...' : 'Crear Proyecto'}
-          </button>
-          <button type="button" onClick={() => navigate(-1)} className="btn-secondary btn-lg" style={{ flex:1 }}>
-            Cancelar
-          </button>
+          <button type="submit" disabled={loading} className="btn-primary btn-lg" style={{ flex:1 }}>{loading ? 'Creando...' : 'Crear Proyecto'}</button>
+          <button type="button" onClick={() => navigate(-1)} className="btn-secondary btn-lg" style={{ flex:1 }}>Cancelar</button>
         </div>
       </form>
 
-      {/* Modal IA */}
       {showAI && (
         <AIModal
           descripcion={form.descripcion}
