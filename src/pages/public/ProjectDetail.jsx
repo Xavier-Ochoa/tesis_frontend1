@@ -219,29 +219,54 @@ export default function ProjectDetail() {
             </div>
           )}
 
-          {/* Collaborators */}
-          {user && (
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '16px' }}>
-              <h3 style={{ fontFamily: 'Syne, sans-serif', fontSize: 13, fontWeight: 700, color: 'var(--text-2)', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Colaboradores</h3>
-              {colabs.length === 0 && <p style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 8 }}>Sin colaboradores.</p>}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
-                {colabs.map(c => (
-                  <div key={c._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
-                    <span style={{ color: 'var(--text-1)' }}>{c.nombre} {c.apellido}</span>
-                    {isDocente && isAuthor && (
-                      <button onClick={() => removeColab(c._id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', fontSize: 16 }}>×</button>
-                    )}
-                  </div>
-                ))}
+          {/* ── Sección Colaboradores ──
+              Reglas de visibilidad:
+              1. Proyecto aprobado+público → cualquiera (con o sin login)
+              2. Proyecto pendiente/rechazado/privado → solo autor, colaborador o admin
+              3. Sin colaboradores + visitante → no se muestra
+              4. Sin colaboradores + docente autor → se muestra para poder agregar
+          */}
+          {(() => {
+            const esPublicoAprobado = project.estado === 'aprobado' && project.publico
+            const tieneAccesoPrivado = isAuthor || isColaborador || user?.rol === 'admin'
+            const puedeVerColabs = esPublicoAprobado || tieneAccesoPrivado
+
+            if (!puedeVerColabs) return null
+
+            // Si no hay colaboradores, solo el docente autor ve la sección (para agregar)
+            if (colabs.length === 0 && !(isDocente && isAuthor)) return null
+
+            return (
+              <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '16px' }}>
+                <h3 style={{ fontFamily: 'Syne, sans-serif', fontSize: 13, fontWeight: 700, color: 'var(--text-2)', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  Colaboradores
+                </h3>
+
+                {colabs.length === 0 && (
+                  <p style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 10 }}>Sin colaboradores aún.</p>
+                )}
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: isDocente && isAuthor ? 10 : 0 }}>
+                  {colabs.map(c => (
+                    <div key={c._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
+                      <span style={{ color: 'var(--text-1)' }}>{c.nombre} {c.apellido}</span>
+                      {isDocente && isAuthor && (
+                        <button onClick={() => removeColab(c._id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', fontSize: 16 }}>×</button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {isDocente && isAuthor && (
+                  <form onSubmit={addColab} style={{ display: 'flex', gap: 6 }}>
+                    <input value={addColabId} onChange={e => setAddColabId(e.target.value)} required
+                      className="input" style={{ flex: 1, fontSize: 12 }} placeholder="ID del estudiante" />
+                    <button type="submit" className="btn-primary btn-xs">+</button>
+                  </form>
+                )}
               </div>
-              {isDocente && isAuthor && (
-                <form onSubmit={addColab} style={{ display: 'flex', gap: 6 }}>
-                  <input value={addColabId} onChange={e => setAddColabId(e.target.value)} required className="input" style={{ flex: 1, fontSize: 12 }} placeholder="ID del estudiante" />
-                  <button type="submit" className="btn-primary btn-xs">+</button>
-                </form>
-              )}
-            </div>
-          )}
+            )
+          })()}
         </div>
       </div>
     </div>
