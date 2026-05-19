@@ -4,20 +4,16 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
 })
 
+// Adjuntar token automáticamente en cada request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('esfot_token')
-
   if (token) {
-    // 🔒 MUY IMPORTANTE: no reemplazar headers, solo agregar
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    }
+    config.headers.Authorization = `Bearer ${token}`
   }
-
   return config
 })
 
+// Si el token expira o es inválido, limpiar sesión
 api.interceptors.response.use(
   (res) => res,
   (error) => {
