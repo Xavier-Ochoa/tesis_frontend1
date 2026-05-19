@@ -17,13 +17,28 @@ export default function Login() {
     setLoading(true)
     try {
       const { data } = await api.post('/auth/login', form)
-      // Manejar ambos formatos: { usuario, token } o todo en el objeto raíz
+
+      // DEBUG - ver exactamente qué devuelve el backend
+      console.log('=== RESPUESTA DEL BACKEND ===')
+      console.log('data completa:', data)
+      console.log('data.token:', data.token)
+      console.log('data.usuario:', data.usuario)
+
       const usuario = data.usuario || data
       const jwt = data.token || data.usuario?.token
+
+      console.log('jwt que se va a guardar:', jwt)
+
       login(usuario, jwt)
+
+      console.log('=== DESPUÉS DEL LOGIN ===')
+      console.log('esfot_token:', localStorage.getItem('esfot_token'))
+      console.log('esfot_user:', localStorage.getItem('esfot_user'))
+
       toast.success('¡Bienvenido!')
       navigate(usuario?.rol === 'admin' ? '/admin' : '/dashboard')
     } catch (err) {
+      console.error('Error login:', err)
       toast.error(err.response?.data?.msg || 'Credenciales incorrectas')
     } finally {
       setLoading(false)
@@ -32,57 +47,35 @@ export default function Login() {
 
   return (
     <div style={{ minHeight: 'calc(100vh - 56px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3rem 1.5rem', background: 'var(--bg)' }}>
-
-      {/* Background decoration */}
       <div style={{ position: 'fixed', inset: 0, zIndex: 0, overflow: 'hidden', pointerEvents: 'none' }}>
         <div style={{ position: 'absolute', top: '-20%', right: '-10%', width: 500, height: 500, background: 'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)', borderRadius: '50%' }} />
         <div style={{ position: 'absolute', bottom: '-10%', left: '-5%', width: 400, height: 400, background: 'radial-gradient(circle, rgba(245,158,11,0.06) 0%, transparent 70%)', borderRadius: '50%' }} />
       </div>
-
       <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 400, animation: 'slideUp 0.4s ease-out' }}>
-        {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div style={{
-            width: 52, height: 52, borderRadius: 14,
-            background: 'linear-gradient(135deg, var(--primary) 0%, #818cf8 100%)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            margin: '0 auto 14px',
-            boxShadow: '0 4px 16px rgba(99,102,241,0.35)',
-          }}>
+          <div style={{ width: 52, height: 52, borderRadius: 14, background: 'linear-gradient(135deg, var(--primary) 0%, #818cf8 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', boxShadow: '0 4px 16px rgba(99,102,241,0.35)' }}>
             <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, color: 'white', fontSize: 20 }}>EP</span>
           </div>
-          <h1 style={{ fontFamily: 'Syne, sans-serif', fontSize: 24, fontWeight: 800, color: 'var(--text-1)', margin: '0 0 6px', letterSpacing: '-0.03em' }}>
-            Iniciar sesión
-          </h1>
+          <h1 style={{ fontFamily: 'Syne, sans-serif', fontSize: 24, fontWeight: 800, color: 'var(--text-1)', margin: '0 0 6px', letterSpacing: '-0.03em' }}>Iniciar sesión</h1>
           <p style={{ fontSize: 14, color: 'var(--text-3)', margin: 0 }}>POLIESFOT — EPN</p>
         </div>
-
-        {/* Card */}
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
           <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div>
               <label className="label">Correo institucional</label>
-              <input name="correoInstitucional" type="email" required value={form.correoInstitucional}
-                onChange={handle} className="input" placeholder="usuario@epn.edu.ec" />
+              <input name="correoInstitucional" type="email" required value={form.correoInstitucional} onChange={handle} className="input" placeholder="usuario@epn.edu.ec" />
             </div>
             <div>
               <label className="label">Contraseña</label>
-              <input name="contraseña" type="password" required value={form.contraseña}
-                onChange={handle} className="input" placeholder="••••••••" />
+              <input name="contraseña" type="password" required value={form.contraseña} onChange={handle} className="input" placeholder="••••••••" />
             </div>
             <button type="submit" disabled={loading} className="btn-primary btn-lg" style={{ width: '100%', marginTop: 4 }}>
               {loading ? 'Ingresando...' : 'Iniciar sesión →'}
             </button>
           </form>
-
           <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: 8, textAlign: 'center' }}>
-            <Link to="/recuperar-password" style={{ fontSize: 13, color: 'var(--primary)', textDecoration: 'none' }}>
-              ¿Olvidaste tu contraseña?
-            </Link>
-            <p style={{ fontSize: 13, color: 'var(--text-3)', margin: 0 }}>
-              ¿No tienes cuenta?{' '}
-              <Link to="/registro" style={{ color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}>Regístrate</Link>
-            </p>
+            <Link to="/recuperar-password" style={{ fontSize: 13, color: 'var(--primary)', textDecoration: 'none' }}>¿Olvidaste tu contraseña?</Link>
+            <p style={{ fontSize: 13, color: 'var(--text-3)', margin: 0 }}>¿No tienes cuenta?{' '}<Link to="/registro" style={{ color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}>Regístrate</Link></p>
           </div>
         </div>
       </div>
