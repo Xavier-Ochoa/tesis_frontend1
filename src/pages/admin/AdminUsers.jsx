@@ -34,13 +34,15 @@ export default function AdminUsers() {
     api.get('/admin/estudiantes/estadisticas')
       .then(r => {
         const raw = r.data?.data || r.data
-        // porRol ahora es objeto: { estudiante: N, docente: N, admin: N }
-        const porRol = raw.porRol || {}
+        // porRol es array de agregación: [{_id:'estudiante', total:N}, ...]
+        // el campo correcto es totalUsuarios, no total
+        const porRol   = raw.porRol || []
+        const getTotal = (rol) => porRol.find(r => r._id === rol)?.total || 0
         setStats({
-          total:       raw.total        || 0,
-          estudiantes: porRol.estudiante || 0,
-          docentes:    porRol.docente    || 0,
-          confirmados: raw.confirmados  ?? null,
+          total:           raw.totalUsuarios   || 0,
+          estudiantes:     getTotal('estudiante'),
+          docentes:        getTotal('docente'),
+          administradores: getTotal('admin'),
         })
       })
       .catch(() => {})
@@ -77,10 +79,10 @@ export default function AdminUsers() {
       {stats && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 12, marginBottom: '1.5rem' }}>
           {[
-            { label: 'Total',       value: stats.total,       icon: '👥' },
-            { label: 'Estudiantes', value: stats.estudiantes, icon: '🎓' },
-            { label: 'Docentes',    value: stats.docentes,    icon: '👨‍🏫' },
-            { label: 'Confirmados', value: stats.confirmados, icon: '✅' },
+            { label: 'Total',            value: stats.total,           icon: '👥' },
+            { label: 'Estudiantes',     value: stats.estudiantes,     icon: '🎓' },
+            { label: 'Docentes',        value: stats.docentes,        icon: '👨‍🏫' },
+            { label: 'Administradores', value: stats.administradores, icon: '🛡️' },
           ].map(s => (
             <div key={s.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '14px 16px', textAlign: 'center', boxShadow: 'var(--shadow-sm)' }}>
               <p style={{ fontSize: 20, margin: '0 0 4px' }}>{s.icon}</p>
