@@ -21,7 +21,14 @@ export default function Profile() {
 }
 
 function ProfileForm({ user, updateUser }) {
-  const [form, setForm] = useState({ apellido: user?.apellido||'', carrera: user?.carrera||'', semestre: user?.semestre||'', telefono: user?.telefono||'', descripcion: user?.descripcion||'', github: user?.github||'' })
+  // apellido excluido del form: el backend no permite modificarlo después del registro
+  const [form, setForm] = useState({
+    carrera:     user?.carrera     || '',
+    semestre:    user?.semestre    || '',
+    telefono:    user?.telefono    || '',
+    descripcion: user?.descripcion || '',
+    github:      user?.github      || '',
+  })
   const [photo, setPhoto]     = useState(null)
   const [preview, setPreview] = useState(user?.fotoPerfil?.url || null)
   const [loading, setLoading] = useState(false)
@@ -37,12 +44,12 @@ function ProfileForm({ user, updateUser }) {
         const fd = new FormData()
         Object.entries(form).forEach(([k,v]) => { if(v!=='') fd.append(k,v) })
         fd.append('fotoPerfil', photo)
-        res = await api.put(`/auth/perfil`, fd)
+        res = await api.put('/auth/perfil', fd)
       } else {
         const payload = { ...form }
         if (payload.semestre) payload.semestre = Number(payload.semestre)
         else delete payload.semestre
-        res = await api.put(`/auth/perfil`, payload)
+        res = await api.put('/auth/perfil', payload)
       }
       updateUser(res.data?.usuario || res.data)
       toast.success('Perfil actualizado')
@@ -73,11 +80,10 @@ function ProfileForm({ user, updateUser }) {
       </div>
 
       <div style={{ background: 'var(--warning-l)', border: '1px solid var(--warning)', borderRadius: 10, padding: '10px 14px', fontSize: 12, color: 'var(--warning)' }}>
-        ⚠️ <strong>Nombre, cédula, correo y rol</strong> no se pueden modificar.
+        ⚠️ <strong>Nombre, apellido, cédula, correo y rol</strong> no se pueden modificar.
       </div>
 
       {[
-        { name:'apellido', label:'Apellido', hint:'Mín. 2 caracteres.', placeholder:'Pérez' },
         { name:'telefono', label:'Teléfono', hint:'10 dígitos. Ej: 0991234567.', placeholder:'0991234567' },
         { name:'github', label:'GitHub (usuario)', hint:'Solo el usuario, sin URL.', placeholder:'mi-usuario' },
       ].map(f => (
@@ -126,7 +132,7 @@ function PasswordForm({ user }) {
     e.preventDefault()
     setLoading(true)
     try {
-      await api.put(`/auth/password`, form)
+      await api.put('/auth/password', form)
       toast.success('Contraseña actualizada')
       setForm({ passwordactual:'', passwordnuevo:'' })
     } catch (err) { toast.error(err.response?.data?.msg || 'Contraseña actual incorrecta') }
