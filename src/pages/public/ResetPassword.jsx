@@ -262,10 +262,7 @@ export default function ResetPassword() {
               </div>
 
               <div style={{ display: 'flex', gap: 8 }}>
-                <button type="button" onClick={() => { setStep(1); setPassError('') }} className="btn-secondary" style={{ flex: 1 }}>
-                  ← Atrás
-                </button>
-                <button type="submit" disabled={loading || confirm !== password || password.length < 6} className="btn-primary" style={{ flex: 2 }}>
+                <button type="submit" disabled={loading || confirm !== password || password.length < 6} className="btn-primary" style={{ width: '100%' }}>
                   {loading
                     ? <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: 'spin 0.7s linear infinite' }}>
