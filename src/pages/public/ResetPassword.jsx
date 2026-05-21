@@ -23,11 +23,19 @@ export default function ResetPassword() {
   const [passError, setPassError]   = useState('')
 
   // ── Paso 1: verificar que el token no esté vacío y pasar al paso 2 ──
-  const handleNextStep = e => {
+  const handleNextStep = async e => {
     e.preventDefault()
     if (!token.trim()) { setTokenError('Ingresa el token de tu correo'); return }
     setTokenError('')
-    setStep(2)
+    setLoading(true)
+    try {
+      await api.get(`/auth/recuperarpassword/${token.trim()}`)
+      setStep(2)
+    } catch (err) {
+      setTokenError(err.response?.data?.msg || 'Token inválido o expirado')
+    } finally {
+      setLoading(false)
+    }
   }
 
   // ── Paso 2: cambiar la contraseña ──
@@ -163,8 +171,16 @@ export default function ResetPassword() {
                   El token se envió a tu correo institucional. Puede tardar unos segundos en llegar.
                 </p>
               </div>
-              <button type="submit" className="btn-primary btn-lg" style={{ width: '100%' }}>
-                Continuar →
+              <button type="submit" disabled={loading} className="btn-primary btn-lg" style={{ width: '100%' }}>
+                {loading
+                  ? <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: 'spin 0.7s linear infinite' }}>
+                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                      </svg>
+                      Verificando...
+                    </span>
+                  : 'Verificar token →'
+                }
               </button>
             </form>
           )}
