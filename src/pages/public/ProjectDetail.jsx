@@ -37,7 +37,7 @@ export default function ProjectDetail() {
   const [loading, setLoading]     = useState(true)
   const [comment, setComment]     = useState('')
   const [colabs, setColabs]       = useState([])
-  const [addColabId, setAddColabId] = useState('')
+  const [addColabEmail, setAddColabEmail] = useState('')
   const [liked, setLiked]         = useState(false)
 
   const fetchProject = async () => {
@@ -83,7 +83,7 @@ export default function ProjectDetail() {
 
   const addColab = async e => {
     e.preventDefault()
-    try { await api.post(`/proyectos/${id}/colaboradores`, { colaboradorId: addColabId }); setAddColabId(''); fetchColabs(); toast.success('Colaborador agregado') }
+    try { await api.post(`/proyectos/${id}/colaboradores`, { email: addColabEmail }); setAddColabEmail(''); fetchColabs(); toast.success('Colaborador agregado') }
     catch (err) { toast.error(err.response?.data?.message || 'Error') }
   }
 
@@ -259,8 +259,8 @@ export default function ProjectDetail() {
 
                 {isDocente && isAuthor && (
                   <form onSubmit={addColab} style={{ display: 'flex', gap: 6 }}>
-                    <input value={addColabId} onChange={e => setAddColabId(e.target.value)} required
-                      className="input" style={{ flex: 1, fontSize: 12 }} placeholder="ID del estudiante" />
+                    <input type="email" value={addColabEmail} onChange={e => setAddColabEmail(e.target.value)} required
+                      className="input" style={{ flex: 1, fontSize: 12 }} placeholder="correo@estudiante.epn.edu.ec" />
                     <button type="submit" className="btn-primary btn-xs">+</button>
                   </form>
                 )}
