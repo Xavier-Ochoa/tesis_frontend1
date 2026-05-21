@@ -12,7 +12,7 @@ export default function ForgotPassword() {
     e.preventDefault()
     setLoading(true)
     try {
-      await api.post('/auth/recuperarpassword', { correoInstitucional: email })
+      await api.post('/auth/recuperarpassword', { email })
       toast.success('Token enviado a tu correo')
       // Redirigir a la página de reset pasando el correo como state (referencia)
       navigate('/nuevo-password', { state: { email } })
