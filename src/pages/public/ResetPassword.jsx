@@ -38,7 +38,7 @@ export default function ResetPassword() {
     if (password !== confirm) { setPassError('Las contraseñas no coinciden'); return }
     setLoading(true)
     try {
-      await api.post(`/auth/nuevopassword/${token.trim()}`, { password })
+      await api.post(`/auth/nuevopassword/${token.trim()}`, { password, confirmpassword: confirm })
       toast.success('¡Contraseña actualizada correctamente!')
       navigate('/login', { state: { fromReset: true } })
     } catch (err) {
