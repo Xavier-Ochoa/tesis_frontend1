@@ -4,14 +4,25 @@ import api from '../../api/axios'
 import toast from 'react-hot-toast'
 import FieldHint from '../../components/FieldHint'
 
+const ROLES = { estudiante: 'Estudiante', docente: 'Docente' }
+
 export default function Register() {
   const navigate = useNavigate()
-  const [form, setForm] = useState({ nombre:'', apellido:'', cedula:'', correoInstitucional:'', contraseña:'', rol:'estudiante', carrera:'', semestre:'' })
-  const [loading, setLoading] = useState(false)
+  const [form, setForm]         = useState({ nombre:'', apellido:'', cedula:'', correoInstitucional:'', contraseña:'', rol:'estudiante', carrera:'', semestre:'' })
+  const [loading, setLoading]   = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+
   const handle = e => setForm({ ...form, [e.target.name]: e.target.value })
 
-  const submit = async e => {
+  // Al pulsar "Crear cuenta" → mostrar modal de confirmación
+  const handlePreSubmit = e => {
     e.preventDefault()
+    setShowConfirm(true)
+  }
+
+  // Al confirmar en el modal → enviar al backend
+  const submit = async () => {
+    setShowConfirm(false)
     setLoading(true)
     try {
       const payload = { ...form }
@@ -37,7 +48,7 @@ export default function Register() {
         </div>
 
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
-          <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <form onSubmit={handlePreSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
                 <label className="label" style={{ display: 'flex', alignItems: 'center' }}>Nombre <FieldHint required text="Solo letras. Mín. 2 caracteres." /></label>
@@ -98,6 +109,94 @@ export default function Register() {
           </p>
         </div>
       </div>
+
+      {/* ── Modal de confirmación ── */}
+      {showConfirm && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 1000,
+          background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '1.5rem', animation: 'fadeIn 0.2s ease-out',
+        }}>
+          <div style={{
+            background: 'var(--surface)', border: '1px solid var(--border)',
+            borderRadius: 20, padding: '2rem', maxWidth: 420, width: '100%',
+            boxShadow: 'var(--shadow-lg)', animation: 'slideUp 0.25s ease-out',
+          }}>
+            {/* Icono + título */}
+            <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
+              <div style={{ fontSize: 44, marginBottom: 10 }}>⚠️</div>
+              <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 20, fontWeight: 800, color: 'var(--text-1)', margin: '0 0 6px', letterSpacing: '-0.02em' }}>
+                ¿Confirmas tus datos?
+              </h2>
+              <p style={{ fontSize: 13, color: 'var(--text-3)', margin: 0, lineHeight: 1.5 }}>
+                Estos campos <strong style={{ color: 'var(--text-2)' }}>no podrán modificarse</strong> una vez creada la cuenta. Verifica que todo sea correcto.
+              </p>
+            </div>
+
+            {/* Datos a confirmar */}
+            <div style={{
+              background: 'var(--surface2)', border: '1px solid var(--border)',
+              borderRadius: 12, overflow: 'hidden', marginBottom: '1.25rem',
+            }}>
+              {[
+                { label: 'Nombre completo', value: `${form.nombre} ${form.apellido}`.trim() },
+                { label: 'Cédula',          value: form.cedula },
+                { label: 'Correo institucional', value: form.correoInstitucional },
+                { label: 'Rol',             value: ROLES[form.rol] || form.rol },
+              ].map((row, i, arr) => (
+                <div key={row.label} style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '10px 14px', gap: 12,
+                  borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none',
+                }}>
+                  <span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 600, flexShrink: 0 }}>
+                    {row.label}
+                  </span>
+                  <span style={{ fontSize: 13, color: 'var(--text-1)', fontWeight: 700, textAlign: 'right', wordBreak: 'break-all' }}>
+                    {row.value || <em style={{ color: 'var(--text-3)', fontWeight: 400 }}>—</em>}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Advertencia */}
+            <div style={{
+              display: 'flex', alignItems: 'flex-start', gap: 10,
+              background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.35)',
+              borderRadius: 10, padding: '10px 14px', marginBottom: '1.5rem',
+            }}>
+              <span style={{ fontSize: 16, flexShrink: 0 }}>🔒</span>
+              <p style={{ fontSize: 12, color: '#b45309', margin: 0, lineHeight: 1.5 }}>
+                Una vez registrado, el nombre, cédula, correo y rol <strong>no se pueden cambiar</strong>. Si hay un error, cancela y corrígelo ahora.
+              </p>
+            </div>
+
+            {/* Botones */}
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="btn-secondary"
+                style={{ flex: 1 }}
+              >
+                ← Cancelar y corregir
+              </button>
+              <button
+                onClick={submit}
+                className="btn-primary"
+                style={{ flex: 1 }}
+              >
+                Sí, crear cuenta ✓
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
     </div>
   )
 }
