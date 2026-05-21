@@ -28,7 +28,14 @@ export default function Login() {
       navigate(data.usuario?.rol === 'admin' ? '/admin' : '/dashboard')
     } catch (err) {
       const msg = err.response?.data?.msg || ''
-      // Detectar si el error es de credenciales para mostrarlo inline
+
+      // Cuenta no confirmada → aviso especial con enlace
+      if (msg.toLowerCase().includes('confirmar') || msg.toLowerCase().includes('confirmado') || msg.toLowerCase().includes('confirma')) {
+        setError('__NO_CONFIRMADO__')
+        return
+      }
+
+      // Credenciales incorrectas → error inline
       const esCredenciales =
         err.response?.status === 400 ||
         err.response?.status === 401 ||
@@ -80,8 +87,36 @@ export default function Login() {
         <div style={{ background: 'var(--surface)', border: `1px solid ${error ? 'var(--danger, #ef4444)' : 'var(--border)'}`, borderRadius: 20, padding: '2rem', boxShadow: 'var(--shadow-lg)', transition: 'border-color 0.2s' }}>
           <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
-            {/* Error inline */}
-            {error && (
+            {/* Error inline — cuenta no confirmada */}
+            {error === '__NO_CONFIRMADO__' && (
+              <div style={{
+                background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.4)',
+                borderRadius: 10, padding: '12px 14px',
+                animation: 'slideUp 0.2s ease-out',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
+                  <span style={{ fontSize: 16, flexShrink: 0 }}>📧</span>
+                  <p style={{ fontSize: 13, color: '#b45309', margin: 0, fontWeight: 500, lineHeight: 1.5 }}>
+                    Tu cuenta aún no ha sido confirmada. Revisa tu correo institucional e ingresa el token de verificación.
+                  </p>
+                </div>
+                <a
+                  href="/confirmar-email"
+                  style={{
+                    display: 'block', textAlign: 'center', width: '100%',
+                    background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.5)',
+                    borderRadius: 8, padding: '8px 12px',
+                    color: '#b45309', fontWeight: 700, fontSize: 13, textDecoration: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                >
+                  Confirmar mi cuenta →
+                </a>
+              </div>
+            )}
+
+            {/* Error inline — credenciales incorrectas */}
+            {error && error !== '__NO_CONFIRMADO__' && (
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 10,
                 background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.35)',
