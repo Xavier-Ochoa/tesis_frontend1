@@ -38,14 +38,18 @@ export default function ResetPassword() {
     if (password !== confirm) { setPassError('Las contraseñas no coinciden'); return }
     setLoading(true)
     try {
-      await api.post(`/auth/nuevopassword/${token.trim()}`, { contraseña: password })
+      await api.post(`/auth/nuevopassword/${token.trim()}`, { password })
       toast.success('¡Contraseña actualizada correctamente!')
       navigate('/login', { state: { fromReset: true } })
     } catch (err) {
       const msg = err.response?.data?.msg || 'Token inválido o expirado'
       setPassError(msg)
-      // Si el token es inválido, volver al paso 1
-      if (err.response?.status === 400 || err.response?.status === 404) {
+      // Solo volver al paso 1 si el error es del token específicamente
+      const esErrorToken =
+        msg.toLowerCase().includes('token') ||
+        msg.toLowerCase().includes('expirad') ||
+        msg.toLowerCase().includes('inválid')
+      if (esErrorToken) {
         setStep(1)
         setToken('')
       }
