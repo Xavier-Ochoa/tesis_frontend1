@@ -7,13 +7,19 @@ import toast from 'react-hot-toast'
 export default function Login() {
   const { login } = useAuth()
   const navigate  = useNavigate()
-  const [form, setForm]       = useState({ correoInstitucional: '', contraseña: '' })
-  const [loading, setLoading] = useState(false)
+  const [form, setForm]         = useState({ correoInstitucional: '', contraseña: '' })
+  const [loading, setLoading]   = useState(false)
+  const [showPass, setShowPass] = useState(false)
+  const [error, setError]       = useState('')
 
-  const handle = e => setForm({ ...form, [e.target.name]: e.target.value })
+  const handle = e => {
+    setError('')
+    setForm({ ...form, [e.target.name]: e.target.value })
+  }
 
   const submit = async e => {
     e.preventDefault()
+    setError('')
     setLoading(true)
     try {
       const { data } = await api.post('/auth/login', form)
@@ -21,7 +27,23 @@ export default function Login() {
       toast.success('¡Bienvenido!')
       navigate(data.usuario?.rol === 'admin' ? '/admin' : '/dashboard')
     } catch (err) {
-      toast.error(err.response?.data?.msg || 'Credenciales incorrectas')
+      const msg = err.response?.data?.msg || ''
+      // Detectar si el error es de credenciales para mostrarlo inline
+      const esCredenciales =
+        err.response?.status === 400 ||
+        err.response?.status === 401 ||
+        msg.toLowerCase().includes('contraseña') ||
+        msg.toLowerCase().includes('correo') ||
+        msg.toLowerCase().includes('credencial') ||
+        msg.toLowerCase().includes('incorrecta') ||
+        msg.toLowerCase().includes('inválid') ||
+        msg.toLowerCase().includes('no encontrad')
+
+      if (esCredenciales) {
+        setError('El correo o la contraseña son incorrectos.')
+      } else {
+        toast.error(msg || 'Error al iniciar sesión')
+      }
     } finally {
       setLoading(false)
     }
@@ -55,18 +77,82 @@ export default function Login() {
         </div>
 
         {/* Card */}
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
+        <div style={{ background: 'var(--surface)', border: `1px solid ${error ? 'var(--danger, #ef4444)' : 'var(--border)'}`, borderRadius: 20, padding: '2rem', boxShadow: 'var(--shadow-lg)', transition: 'border-color 0.2s' }}>
           <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+            {/* Error inline */}
+            {error && (
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.35)',
+                borderRadius: 10, padding: '10px 14px',
+                animation: 'slideUp 0.2s ease-out',
+              }}>
+                <span style={{ fontSize: 16, flexShrink: 0 }}>⚠️</span>
+                <p style={{ fontSize: 13, color: '#ef4444', margin: 0, fontWeight: 500 }}>{error}</p>
+              </div>
+            )}
+
             <div>
               <label className="label">Correo institucional</label>
-              <input name="correoInstitucional" type="email" required value={form.correoInstitucional}
-                onChange={handle} className="input" placeholder="usuario@epn.edu.ec" />
+              <input
+                name="correoInstitucional"
+                type="email"
+                required
+                value={form.correoInstitucional}
+                onChange={handle}
+                className="input"
+                placeholder="usuario@epn.edu.ec"
+                style={error ? { borderColor: 'rgba(239,68,68,0.5)' } : {}}
+                autoComplete="email"
+              />
             </div>
+
             <div>
               <label className="label">Contraseña</label>
-              <input name="contraseña" type="password" required value={form.contraseña}
-                onChange={handle} className="input" placeholder="••••••••" />
+              <div style={{ position: 'relative' }}>
+                <input
+                  name="contraseña"
+                  type={showPass ? 'text' : 'password'}
+                  required
+                  value={form.contraseña}
+                  onChange={handle}
+                  className="input"
+                  placeholder="••••••••"
+                  style={{ paddingRight: 44, ...(error ? { borderColor: 'rgba(239,68,68,0.5)' } : {}) }}
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPass(v => !v)}
+                  style={{
+                    position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: 'var(--text-3)', padding: 4, display: 'flex', alignItems: 'center',
+                    borderRadius: 6, transition: 'color 0.15s',
+                  }}
+                  title={showPass ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  onMouseEnter={e => e.currentTarget.style.color = 'var(--text-1)'}
+                  onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}
+                >
+                  {showPass ? (
+                    // Ojo tachado (ocultar)
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  ) : (
+                    // Ojo (mostrar)
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
+
             <button type="submit" disabled={loading} className="btn-primary btn-lg" style={{ width: '100%', marginTop: 4 }}>
               {loading ? 'Ingresando...' : 'Iniciar sesión →'}
             </button>
