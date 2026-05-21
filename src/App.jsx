@@ -34,6 +34,7 @@ export default function App() {
           <Route path="/registro"              element={<Register />} />
           <Route path="/confirmar-email"       element={<ConfirmEmail />} />
           <Route path="/recuperar-password"    element={<ForgotPassword />} />
+          <Route path="/nuevo-password"         element={<ResetPassword />} />
           <Route path="/nuevo-password/:token" element={<ResetPassword />} />
           <Route path="/proyectos/:id"         element={<ProjectDetail />} />
           <Route path="/donaciones"            element={<Donations />} />
