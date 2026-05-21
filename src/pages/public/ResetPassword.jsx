@@ -50,16 +50,27 @@ export default function ResetPassword() {
       toast.success('¡Contraseña actualizada correctamente!')
       navigate('/login', { state: { fromReset: true } })
     } catch (err) {
-      const msg = err.response?.data?.msg || 'Token inválido o expirado'
-      setPassError(msg)
-      // Solo volver al paso 1 si el error es del token específicamente
+      const data = err.response?.data
+
+      // Si hay errores de validación de campos (array errores[]), mostrarlos inline
+      if (data?.errores?.length) {
+        const msgs = data.errores.map(e => e.mensaje).join(' · ')
+        setPassError(msgs)
+        return
+      }
+
+      const msg = data?.msg || ''
+
+      // Solo volver al paso 1 si el error es explícitamente del token
       const esErrorToken =
-        msg.toLowerCase().includes('token') ||
-        msg.toLowerCase().includes('expirad') ||
-        msg.toLowerCase().includes('inválid')
+        err.response?.status === 404 ||
+        (msg.toLowerCase().includes('token') && !msg.toLowerCase().includes('contrase'))
       if (esErrorToken) {
+        setTokenError(msg || 'Token inválido o expirado')
         setStep(1)
         setToken('')
+      } else {
+        setPassError(msg || 'Error al actualizar la contraseña')
       }
     } finally { setLoading(false) }
   }
