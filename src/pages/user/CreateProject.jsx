@@ -8,7 +8,7 @@ const MAX_IMAGENES = 5
 const defaultForm = {
   titulo:'', descripcion:'', categoria:'academico', fechaInicio:'',
   fechaFin:'', carrera:'', tecnologias:'', repositorio:'', enlaceDemo:'',
-  asignatura:'', tags:'', nivel:'', publico:'false',
+  lineaInvestigacion:'', tags:'', tipoProyecto:'privado',
 }
 
 // ── Modal IA ──────────────────────────────────────────────────────────────────
@@ -97,12 +97,16 @@ function AIModal({ descripcion, onSelect, onClose }) {
 export default function CreateProject() {
   const navigate = useNavigate()
   const [form, setForm]         = useState(defaultForm)
-  const [images, setImages]     = useState([])       // File[]
-  const [previews, setPreviews] = useState([])       // string[] (object URLs)
+  const [images, setImages]     = useState([])
+  const [previews, setPreviews] = useState([])
   const [loading, setLoading]   = useState(false)
   const [showAI, setShowAI]     = useState(false)
 
-  const handle = e => setForm({ ...form, [e.target.name]: e.target.value })
+  const handle = e => {
+    const { name, value } = e.target
+    // Bloquear cambio de público a privado si ya se eligió público (advertencia)
+    setForm({ ...form, [name]: value })
+  }
 
   const handleImages = e => {
     const files = Array.from(e.target.files || [])
@@ -129,7 +133,13 @@ export default function CreateProject() {
       Object.entries(form).forEach(([k, v]) => { if (v !== '') fd.append(k, v) })
       images.forEach(img => fd.append('imagenes', img))
       const { data } = await api.post('/proyectos', fd)
-      toast.success('Proyecto creado. Pendiente de revisión.')
+      const proyectoId = data.data?.proyecto_id || data.proyecto_id || ''
+      const version    = data.data?.version || data.version || '001'
+      toast.success(
+        proyectoId
+          ? `Proyecto creado con código ${proyectoId}, versión ${version}. Pendiente de revisión.`
+          : 'Proyecto creado. Pendiente de revisión.'
+      )
       navigate(`/proyectos/${data.data?._id || data._id}`)
     } catch (err) {
       const errores = err.response?.data?.errores
@@ -137,6 +147,11 @@ export default function CreateProject() {
       else toast.error(err.response?.data?.message || 'Error al crear')
     } finally { setLoading(false) }
   }
+
+  // Texto de ayuda según tipo de proyecto
+  const tipoHint = form.tipoProyecto === 'publico'
+    ? { icon: '⚠️', color: 'var(--warning)', bg: 'var(--warning-l)', border: 'var(--warning)', text: 'Los proyectos públicos son revisados por el administrador. Una vez creado, solo podrás editarlo si es rechazado. No podrás convertirlo a privado ni eliminarlo permanentemente.' }
+    : { icon: 'ℹ️', color: 'var(--primary)', bg: 'var(--primary-l)', border: 'var(--primary)', text: 'Los proyectos privados solo son visibles para ti y tus colaboradores. Podrás editarlo mientras esté pendiente o rechazado. Si deseas eliminarlo podrás hacerlo de forma permanente.' }
 
   return (
     <div className="page" style={{ maxWidth:680, animation:'slideUp 0.4s ease-out' }}>
@@ -157,7 +172,6 @@ export default function CreateProject() {
             </span>
           </label>
 
-          {/* Miniaturas */}
           {previews.length > 0 && (
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(100px, 1fr))', gap:8, marginBottom:10 }}>
               {previews.map((src, i) => (
@@ -175,7 +189,6 @@ export default function CreateProject() {
             </div>
           )}
 
-          {/* Botón agregar */}
           {images.length < MAX_IMAGENES && (
             <div onClick={() => document.getElementById('imgs-create').click()}
               style={{ border:`2px dashed var(--border2)`, borderRadius:12, padding:'1.25rem', textAlign:'center', cursor:'pointer', background:'var(--surface2)', transition:'border-color 0.2s' }}
@@ -255,10 +268,10 @@ export default function CreateProject() {
           <input name="tecnologias" value={form.tecnologias} onChange={handle} className="input" placeholder="React, Node.js, MongoDB" />
         </div>
 
-        {/* Asignatura */}
+        {/* Línea de Investigación (antes: Asignatura) */}
         <div>
-          <label className="label" style={{ display:'flex', alignItems:'center' }}>Asignatura <FieldHint text="Materia relacionada con el proyecto." /></label>
-          <input name="asignatura" value={form.asignatura} onChange={handle} className="input" placeholder="Redes de Computadoras" />
+          <label className="label" style={{ display:'flex', alignItems:'center' }}>Línea de Investigación <FieldHint text="Área o materia relacionada con el proyecto. Opcional." /></label>
+          <input name="lineaInvestigacion" value={form.lineaInvestigacion} onChange={handle} className="input" placeholder="Ej: Redes de Computadoras, Inteligencia Artificial..." />
         </div>
 
         {/* Repositorio + Demo */}
@@ -273,25 +286,29 @@ export default function CreateProject() {
           </div>
         </div>
 
-        {/* Nivel + Público */}
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
-          <div>
-            <label className="label" style={{ display:'flex', alignItems:'center' }}>Semestre / Nivel <FieldHint text="Número del 1 al 6." /></label>
-            <input name="nivel" type="number" min={1} max={6} value={form.nivel} onChange={handle} className="input" placeholder="1 - 6" />
-          </div>
-          <div>
-            <label className="label" style={{ display:'flex', alignItems:'center' }}>¿Público? <FieldHint text="Público: visible si está aprobado. Privado: solo tú." /></label>
-            <select name="publico" value={form.publico} onChange={handle} className="input">
-              <option value="false">🔒 Privado</option>
-              <option value="true">🌐 Público</option>
-            </select>
-          </div>
-        </div>
-
         {/* Tags */}
         <div>
           <label className="label" style={{ display:'flex', alignItems:'center' }}>Tags <FieldHint text="Palabras clave separadas por coma." /></label>
           <input name="tags" value={form.tags} onChange={handle} className="input" placeholder="iot, python, redes" />
+        </div>
+
+        {/* Tipo de Proyecto (reemplaza campo "publico") */}
+        <div>
+          <label className="label" style={{ display:'flex', alignItems:'center' }}>
+            Tipo de Proyecto <FieldHint required text="Público: revisado por el admin. Privado: solo visible para ti y colaboradores." />
+          </label>
+          <select name="tipoProyecto" value={form.tipoProyecto} onChange={handle} className="input">
+            <option value="privado">🔒 Privado</option>
+            <option value="publico">🌐 Público</option>
+          </select>
+          {/* Alerta informativa dinámica */}
+          <div style={{
+            marginTop:8, padding:'10px 14px', borderRadius:10,
+            background: tipoHint.bg, border: `1px solid ${tipoHint.border}`,
+            fontSize:13, color: tipoHint.color, lineHeight:1.55,
+          }}>
+            {tipoHint.icon} {tipoHint.text}
+          </div>
         </div>
 
         <div style={{ display:'flex', gap:10, paddingTop:4 }}>
