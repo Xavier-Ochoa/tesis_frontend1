@@ -1,13 +1,21 @@
 import { Link } from 'react-router-dom'
 
 export default function ProjectCard({ project }) {
-  const { _id, titulo, descripcion, categoria, carrera, tecnologias, imagenes, estado, autor, likes = [] } = project
+  const {
+    _id, titulo, descripcion, categoria, carrera, tecnologias,
+    imagenes, estado, autor, likes = [],
+    tipoProyecto, version, esUltimaVersion, proyecto_id,
+  } = project
 
   const estadoConfig = {
     aprobado:  { label: 'Aprobado',  color: 'badge-green' },
     pendiente: { label: 'Pendiente', color: 'badge-yellow' },
     rechazado: { label: 'Rechazado', color: 'badge-red' },
   }[estado] || { label: estado, color: 'badge-gray' }
+
+  const tipoLabel  = tipoProyecto === 'publico' ? '🌐 Público' : '🔒 Privado'
+  const tipoBadge  = tipoProyecto === 'publico' ? 'badge-green' : 'badge-gray'
+  const versionStr = version ? `v${String(version).padStart(3, '0')}` : null
 
   return (
     <Link to={`/proyectos/${_id}`} style={{ textDecoration: 'none', display: 'block' }}>
@@ -19,6 +27,7 @@ export default function ProjectCard({ project }) {
         transition: 'all 0.2s ease',
         height: '100%',
         display: 'flex', flexDirection: 'column',
+        opacity: esUltimaVersion === false ? 0.75 : 1,
       }}
         onMouseEnter={e => {
           e.currentTarget.style.transform = 'translateY(-3px)'
@@ -31,6 +40,13 @@ export default function ProjectCard({ project }) {
           e.currentTarget.style.borderColor = 'var(--border)'
         }}
       >
+        {/* Versión anterior banner */}
+        {esUltimaVersion === false && (
+          <div style={{ background:'var(--warning-l)', borderBottom:'1px solid var(--warning)', padding:'5px 14px', fontSize:11, fontWeight:700, color:'var(--warning)', display:'flex', alignItems:'center', gap:5 }}>
+            🕒 Versión anterior
+          </div>
+        )}
+
         {/* Image */}
         {imagenes?.[0] ? (
           <div style={{ height: 160, overflow: 'hidden', flexShrink: 0, background: 'var(--surface2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -70,6 +86,17 @@ export default function ProjectCard({ project }) {
             <span className={`badge ${estadoConfig.color}`} style={{ flexShrink: 0, marginTop: 2 }}>
               {estadoConfig.label}
             </span>
+          </div>
+
+          {/* Badges: tipo, versión, código */}
+          <div style={{ display:'flex', gap:5, flexWrap:'wrap', alignItems:'center' }}>
+            <span className={`badge ${tipoBadge}`} style={{ fontSize:10 }}>{tipoLabel}</span>
+            {versionStr && (
+              <span className="badge badge-blue" style={{ fontSize:10 }}>{versionStr}</span>
+            )}
+            {proyecto_id && (
+              <span style={{ fontSize:10, color:'var(--text-3)', fontWeight:600 }}>#{proyecto_id}</span>
+            )}
           </div>
 
           <p style={{ fontSize: 13, color: 'var(--text-2)', margin: 0, lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', flex: 1 }}>
