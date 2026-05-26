@@ -284,32 +284,7 @@ export default function MyProjects() {
 
       {/* TAB: Colaboradores */}
       {activeTab === 'colaboradores' && (
-        <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
-          {projects.length === 0 ? (
-            <div style={{ textAlign:'center', padding:'4rem 2rem', background:'var(--surface)', border:'1px solid var(--border)', borderRadius:16 }}>
-              <p style={{ fontSize:38, marginBottom:10 }}>📁</p>
-              <p style={{ fontFamily:'Syne,sans-serif', fontSize:16, fontWeight:700, color:'var(--text-1)', marginBottom:6 }}>No tienes proyectos</p>
-              <p style={{ fontSize:13, color:'var(--text-3)', marginBottom:18 }}>Crea un proyecto para gestionar su equipo de colaboradores.</p>
-              <Link to="/mis-proyectos/nuevo" className="btn-primary">Crear proyecto</Link>
-            </div>
-          ) : (
-            <>
-              <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:12, padding:'14px 16px' }}>
-                <label style={{ fontSize:11, fontWeight:700, color:'var(--text-3)', textTransform:'uppercase', letterSpacing:'0.08em', display:'block', marginBottom:8 }}>
-                  Proyecto seleccionado
-                </label>
-                <select value={selectedProject?._id || ''} onChange={e => setSelectedProject(projects.find(p => p._id === e.target.value) || null)} className="input" style={{ margin:0 }}>
-                  {projects.map(p => <option key={p._id} value={p._id}>{p.titulo}</option>)}
-                </select>
-              </div>
-              {selectedProject && (
-                <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:16, padding:'1.25rem', animation:'slideUp 0.25s ease-out' }}>
-                  <ColaboradoresTab key={selectedProject._id} projectId={selectedProject._id} projectTitle={selectedProject.titulo} />
-                </div>
-              )}
-            </>
-          )}
-        </div>
+        <ColaboradoresTab />
       )}
 
       {/* Modales */}
