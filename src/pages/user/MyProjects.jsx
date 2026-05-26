@@ -63,41 +63,24 @@ export default function MyProjects() {
 
   useEffect(() => { fetchProjects() }, [filtroEstado, filtroTipo])
 
-  // Lógica de eliminación según tipoProyecto
+  // Solo proyectos privados pueden ser eliminados por el estudiante/docente
+  // Los públicos solo el admin puede desactivarlos desde su panel
   const handleDelete = (p) => {
-    if (p.tipoProyecto === 'publico') {
-      setConfirmModal({
-        title: 'ℹ️ ¿Desactivar proyecto?',
-        message: 'El proyecto dejará de ser visible en la plataforma, pero no será eliminado permanentemente. Todas las versiones serán desactivadas.',
-        confirmLabel: 'Desactivar',
-        danger: false,
-        onConfirm: async () => {
-          try {
-            await api.delete(`/proyectos/${p._id}`)
-            toast.success('Proyecto desactivado.')
-            if (selectedProject?._id === p._id) setSelectedProject(null)
-            fetchProjects()
-          } catch { toast.error('No se pudo desactivar') }
-          setConfirmModal(null)
-        }
-      })
-    } else {
-      setConfirmModal({
-        title: '⚠️ ¿Eliminar proyecto permanentemente?',
-        message: 'Esta acción no se puede deshacer. El proyecto y todas sus versiones serán eliminados definitivamente, incluyendo imágenes y archivos.',
-        confirmLabel: 'Eliminar permanentemente',
-        danger: true,
-        onConfirm: async () => {
-          try {
-            await api.delete(`/proyectos/${p._id}`)
-            toast.success('Proyecto eliminado permanentemente.')
-            if (selectedProject?._id === p._id) setSelectedProject(null)
-            fetchProjects()
-          } catch { toast.error('No se pudo eliminar') }
-          setConfirmModal(null)
-        }
-      })
-    }
+    setConfirmModal({
+      title: '⚠️ ¿Eliminar proyecto permanentemente?',
+      message: 'Esta acción no se puede deshacer. El proyecto y todas sus versiones serán eliminados definitivamente, incluyendo imágenes y archivos.',
+      confirmLabel: 'Eliminar permanentemente',
+      danger: true,
+      onConfirm: async () => {
+        try {
+          await api.delete(`/proyectos/${p._id}`)
+          toast.success('Proyecto eliminado permanentemente.')
+          if (selectedProject?._id === p._id) setSelectedProject(null)
+          fetchProjects()
+        } catch { toast.error('No se pudo eliminar') }
+        setConfirmModal(null)
+      }
+    })
   }
 
   // Determinar si mostrar botón Editar
@@ -270,9 +253,11 @@ export default function MyProjects() {
                         </button>
                       )}
 
-                      <button onClick={() => handleDelete(p)} className="btn-danger btn-sm">
-                        {p.tipoProyecto === 'publico' ? 'Desactivar' : 'Eliminar'}
-                      </button>
+                      {p.tipoProyecto === 'privado' && (
+                        <button onClick={() => handleDelete(p)} className="btn-danger btn-sm" title="Eliminar proyecto permanentemente">
+                          🗑️ Eliminar
+                        </button>
+                      )}
                     </div>
                   </div>
                 )
