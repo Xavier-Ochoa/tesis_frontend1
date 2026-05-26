@@ -153,8 +153,12 @@ export default function MyProjects() {
     return ''
   }
 
-  // Mostrar botón Nueva Versión
-  const puedeNuevaVersion = (p) => puedeEditar(p) && p.esUltimaVersion === true
+  // Solo público + aprobado + última versión + autor puede crear nueva versión
+  const puedeNuevaVersion = (p) =>
+    p.esUltimaVersion === true &&
+    p.tipoProyecto === 'publico' &&
+    p.estado === 'aprobado' &&
+    p.rolEnProyecto === 'autor'
 
   if (loading) return <Spinner />
 
