@@ -14,7 +14,8 @@ import ProjectDetail  from './pages/public/ProjectDetail'
 import Dashboard     from './pages/user/Dashboard'
 import MyProjects    from './pages/user/MyProjects'
 import CreateProject from './pages/user/CreateProject'
-import EditProject   from './pages/user/EditProject'
+import EditProject      from './pages/user/EditProject'
+import CreateVersion    from './pages/user/CreateVersion'
 import Profile       from './pages/user/Profile'
 import Donations     from './pages/user/Donations'
 
@@ -43,7 +44,8 @@ export default function App() {
           <Route path="/dashboard"                element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/mis-proyectos"            element={<ProtectedRoute><MyProjects /></ProtectedRoute>} />
           <Route path="/mis-proyectos/nuevo"      element={<ProtectedRoute><CreateProject /></ProtectedRoute>} />
-          <Route path="/mis-proyectos/editar/:id" element={<ProtectedRoute><EditProject /></ProtectedRoute>} />
+          <Route path="/mis-proyectos/editar/:id"         element={<ProtectedRoute><EditProject /></ProtectedRoute>} />
+          <Route path="/mis-proyectos/:id/nueva-version" element={<ProtectedRoute><CreateVersion /></ProtectedRoute>} />
           <Route path="/perfil"                   element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
           {/* Admin */}
