@@ -205,7 +205,8 @@ export default function ProjectDetail() {
   }
 
   const mostrarEditar = esMiembro
-  const puedeNuevaVersion = esMiembro && esUltima && puedeEditarBoton
+  // Solo autor + público + aprobado + última versión puede crear nueva versión
+  const puedeNuevaVersion = isAuthor && esUltima && tipo === 'publico' && est === 'aprobado'
 
   const estadoConfig = { aprobado: { label:'Aprobado', cls:'badge-green' }, pendiente: { label:'Pendiente', cls:'badge-yellow' }, rechazado: { label:'Rechazado', cls:'badge-red' } }
   const ec     = estadoConfig[est] || { label:est, cls:'badge-gray' }
