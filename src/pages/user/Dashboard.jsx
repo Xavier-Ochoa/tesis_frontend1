@@ -114,7 +114,11 @@ export default function Dashboard() {
           { to: '/mis-proyectos/nuevo', emoji: '➕', title: 'Crear Proyecto',    desc: 'Publicar nuevo' },
           { to: '/perfil',              emoji: '👤', title: 'Mi Perfil',         desc: 'Editar datos' },
           { to: '/donaciones',          emoji: '💙', title: 'Donar',             desc: 'Apoya la plataforma' },
-          ...(isAdmin ? [{ to: '/admin', emoji: '⚙️', title: 'Panel Admin', desc: 'Gestionar todo' }] : []),
+          { to: '/chat',                   emoji: '💬', title: 'Chat Soporte',     desc: 'Contactar al admin' },
+          ...(isAdmin ? [
+            { to: '/admin',      emoji: '⚙️', title: 'Panel Admin', desc: 'Gestionar todo' },
+            { to: '/admin/chat', emoji: '💬', title: 'Chat Admin',  desc: 'Ver conversaciones' },
+          ] : []),
         ].map(item => (
           <Link key={item.to} to={item.to} style={{ textDecoration: 'none' }}>
             <div style={{
