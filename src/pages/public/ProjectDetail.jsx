@@ -28,42 +28,6 @@ function ImageGallery({ images, title }) {
   )
 }
 
-// ── Modal de nueva versión ────────────────────────────────────────────────────
-function NuevaVersionModal({ project, onClose, onCreated }) {
-  const navigate   = useNavigate()
-  const [loading, setLoading] = useState(false)
-
-  const crear = async () => {
-    setLoading(true)
-    try {
-      const { data } = await api.post(`/proyectos/${project._id}/versiones`, {})
-      const newId = data.data?._id || data._id
-      const ver   = data.data?.version || data.version || ''
-      toast.success(`Versión ${ver} creada exitosamente. Está pendiente de revisión.`)
-      onCreated()
-      onClose()
-      if (newId) navigate(`/proyectos/${newId}`)
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Error al crear versión')
-    } finally { setLoading(false) }
-  }
-
-  return (
-    <div onClick={e => { if (e.target === e.currentTarget) onClose() }}
-      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', zIndex:50, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
-      <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:20, padding:'1.75rem', width:'100%', maxWidth:440, boxShadow:'var(--shadow-lg)', animation:'slideUp 0.2s ease-out' }}>
-        <h2 style={{ fontFamily:'Syne,sans-serif', fontSize:18, fontWeight:800, color:'var(--text-1)', margin:'0 0 10px' }}>🔖 Crear nueva versión</h2>
-        <div style={{ background:'var(--primary-l)', border:'1px solid var(--primary)', borderRadius:10, padding:'12px 14px', fontSize:13, color:'var(--primary)', marginBottom:'1.25rem', lineHeight:1.6 }}>
-          ℹ️ Se creará una nueva versión del proyecto copiando todos los datos actuales como punto de partida. La versión anterior quedará bloqueada y no podrá modificarse. El nuevo proyecto quedará como <strong>pendiente</strong> hasta que el administrador lo revise.
-        </div>
-        <div style={{ display:'flex', gap:10 }}>
-          <button onClick={crear} disabled={loading} className="btn-primary" style={{ flex:1 }}>{loading ? 'Creando...' : 'Continuar'}</button>
-          <button onClick={onClose} className="btn-secondary" style={{ flex:1 }}>Cancelar</button>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 // ── Historial de Versiones ────────────────────────────────────────────────────
 function HistorialVersiones({ proyectoId }) {
@@ -104,9 +68,7 @@ function HistorialVersiones({ proyectoId }) {
                 {v.createdAt ? new Date(v.createdAt).toLocaleDateString('es-EC') : '—'}
               </span>
             </div>
-            {v.esUltimaVersion && (
-              <Link to={`/proyectos/${v._id}`} className="btn-secondary btn-xs">Ver</Link>
-            )}
+            <Link to={`/proyectos/${v._id}`} className="btn-secondary btn-xs">Ver</Link>
           </div>
         )
       })}
@@ -123,7 +85,6 @@ export default function ProjectDetail() {
   const [colabs, setColabs]       = useState([])
   const [addColabEmail, setAddColabEmail] = useState('')
   const [liked, setLiked]         = useState(false)
-  const [showVersionModal, setShowVersionModal] = useState(false)
   const [showHistorial, setShowHistorial]       = useState(false)
 
   const fetchProject = async () => {
@@ -293,9 +254,9 @@ export default function ProjectDetail() {
             )}
 
             {puedeNuevaVersion && (
-              <button onClick={() => setShowVersionModal(true)} className="btn-secondary btn-sm">
+              <Link to={`/mis-proyectos/${id}/nueva-version`} className="btn-secondary btn-sm">
                 🔖 Nueva versión
-              </button>
+              </Link>
             )}
 
             {project.proyecto_id && (
@@ -420,14 +381,6 @@ export default function ProjectDetail() {
         </div>
       </div>
 
-      {/* Modal nueva versión */}
-      {showVersionModal && (
-        <NuevaVersionModal
-          project={project}
-          onClose={() => setShowVersionModal(false)}
-          onCreated={fetchProject}
-        />
-      )}
     </div>
   )
 }
