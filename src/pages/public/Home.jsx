@@ -25,7 +25,7 @@ export default function Home() {
   const fetchProjects = async () => {
     setLoading(true)
     try {
-      const params = { page, limit: 9 }
+      const params = { page, limit: 8 }
       if (categoria) params.categoria = categoria
       const { data } = await api.get('/proyectos', { params })
       setProjects(data.data || [])
