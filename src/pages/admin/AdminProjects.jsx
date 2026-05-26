@@ -91,9 +91,7 @@ function VersionesModal({ proyectoId, onClose }) {
                       {v.createdAt ? new Date(v.createdAt).toLocaleDateString('es-EC') : '—'}
                     </span>
                   </div>
-                  {v.esUltimaVersion && (
-                    <Link to={`/proyectos/${v._id}`} className="btn-secondary btn-xs" style={{ flexShrink:0 }}>Ver</Link>
-                  )}
+                  <Link to={`/proyectos/${v._id}`} className="btn-secondary btn-xs" style={{ flexShrink:0 }}>Ver</Link>
                 </div>
               )
             })}
