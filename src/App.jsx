@@ -22,6 +22,9 @@ import Donations     from './pages/user/Donations'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminProjects  from './pages/admin/AdminProjects'
 import AdminUsers     from './pages/admin/AdminUsers'
+import AdminChat      from './pages/admin/AdminChat'
+
+import Chat from './pages/user/Chat'
 
 export default function App() {
   return (
@@ -47,11 +50,13 @@ export default function App() {
           <Route path="/mis-proyectos/editar/:id"         element={<ProtectedRoute><EditProject /></ProtectedRoute>} />
           <Route path="/mis-proyectos/:id/nueva-version" element={<ProtectedRoute><CreateVersion /></ProtectedRoute>} />
           <Route path="/perfil"                   element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/chat"                     element={<ProtectedRoute><Chat /></ProtectedRoute>} />
 
           {/* Admin */}
           <Route path="/admin"           element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/admin/proyectos" element={<AdminRoute><AdminProjects /></AdminRoute>} />
           <Route path="/admin/usuarios"  element={<AdminRoute><AdminUsers /></AdminRoute>} />
+          <Route path="/admin/chat"      element={<AdminRoute><AdminChat /></AdminRoute>} />
 
           {/* 404 */}
           <Route path="*" element={
