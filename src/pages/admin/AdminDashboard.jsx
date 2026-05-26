@@ -70,6 +70,7 @@ export default function AdminDashboard() {
         {[
           { to: '/admin/proyectos', emoji: '📋', title: 'Gestionar Proyectos', desc: 'Aprobar, rechazar y editar', accent: true },
           { to: '/admin/usuarios',  emoji: '👥', title: 'Gestionar Usuarios',  desc: 'Ver todos los registrados', accent: false },
+          { to: '/admin/chat',      emoji: '💬', title: 'Chat Soporte',        desc: 'Responder a usuarios', accent: false },
           { to: '/',                emoji: '🌐', title: 'Vista Pública',       desc: 'Ver como usuario normal',  accent: false },
         ].map(item => (
           <Link key={item.to} to={item.to} style={{ textDecoration: 'none' }}>
