@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import { useAuth } from '../../context/AuthContext'
 import Spinner from '../../components/Spinner'
@@ -35,43 +35,10 @@ function ConfirmModal({ config, onConfirm, onClose }) {
   )
 }
 
-// ── Modal de nueva versión ─────────────────────────────────────────────────────
-function NuevaVersionModal({ project, onClose, onCreated }) {
-  const [step, setStep]     = useState('confirm') // 'confirm' | 'done'
-  const [loading, setLoading] = useState(false)
-
-  const crear = async () => {
-    setLoading(true)
-    try {
-      const { data } = await api.post(`/proyectos/${project._id}/versiones`, {})
-      const ver = data.data?.version || data.version || ''
-      toast.success(`Versión ${ver} creada exitosamente. Está pendiente de revisión.`)
-      onCreated()
-      onClose()
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Error al crear versión')
-    } finally { setLoading(false) }
-  }
-
-  return (
-    <div onClick={e => { if (e.target === e.currentTarget) onClose() }}
-      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', zIndex:50, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
-      <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:20, padding:'1.75rem', width:'100%', maxWidth:440, boxShadow:'var(--shadow-lg)', animation:'slideUp 0.2s ease-out' }}>
-        <h2 style={{ fontFamily:'Syne,sans-serif', fontSize:18, fontWeight:800, color:'var(--text-1)', margin:'0 0 10px' }}>🔖 Crear nueva versión</h2>
-        <div style={{ background:'var(--primary-l)', border:'1px solid var(--primary)', borderRadius:10, padding:'12px 14px', fontSize:13, color:'var(--primary)', marginBottom:'1.25rem', lineHeight:1.6 }}>
-          ℹ️ Se creará una nueva versión del proyecto copiando todos los datos actuales como punto de partida. La versión anterior quedará bloqueada y no podrá modificarse. El nuevo proyecto quedará como <strong>pendiente</strong> hasta que el administrador lo revise.
-        </div>
-        <div style={{ display:'flex', gap:10 }}>
-          <button onClick={crear} disabled={loading} className="btn-primary" style={{ flex:1 }}>{loading ? 'Creando...' : 'Continuar'}</button>
-          <button onClick={onClose} className="btn-secondary" style={{ flex:1 }}>Cancelar</button>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 export default function MyProjects() {
   const { user } = useAuth()
+  const navigate   = useNavigate()
   const [activeTab, setActiveTab]   = useState('proyectos')
   const [projects, setProjects]     = useState([])
   const [loading, setLoading]       = useState(true)
@@ -79,7 +46,6 @@ export default function MyProjects() {
   const [filtroTipo, setFiltroTipo]     = useState('')
   const [selectedProject, setSelectedProject] = useState(null)
   const [confirmModal, setConfirmModal] = useState(null)
-  const [versionModal, setVersionModal] = useState(null)
 
   const fetchProjects = () => {
     const params = {}
@@ -293,7 +259,7 @@ export default function MyProjects() {
                       )}
 
                       {canVer && (
-                        <button onClick={() => setVersionModal(p)} className="btn-secondary btn-sm" title="Crear nueva versión de este proyecto">
+                        <button onClick={() => navigate(`/mis-proyectos/${p._id}/nueva-version`)} className="btn-secondary btn-sm" title="Crear nueva versión de este proyecto">
                           🔖 Nueva versión
                         </button>
                       )}
@@ -353,13 +319,6 @@ export default function MyProjects() {
         onClose={() => setConfirmModal(null)}
       />
 
-      {versionModal && (
-        <NuevaVersionModal
-          project={versionModal}
-          onClose={() => setVersionModal(null)}
-          onCreated={fetchProjects}
-        />
-      )}
     </div>
   )
 }
