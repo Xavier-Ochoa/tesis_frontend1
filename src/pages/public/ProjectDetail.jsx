@@ -5,7 +5,6 @@ import { useAuth } from '../../context/AuthContext'
 import Spinner from '../../components/Spinner'
 import toast from 'react-hot-toast'
 
-// ── Galería con miniaturas ────────────────────────────────────────────────────
 function ImageGallery({ images, title }) {
   const [active, setActive] = useState(0)
   if (!images?.length) return null
@@ -28,8 +27,6 @@ function ImageGallery({ images, title }) {
   )
 }
 
-
-// ── Historial de Versiones ────────────────────────────────────────────────────
 function HistorialVersiones({ proyectoId }) {
   const [versiones, setVersiones] = useState([])
   const [loading, setLoading]     = useState(true)
@@ -64,9 +61,7 @@ function HistorialVersiones({ proyectoId }) {
                 <span className={`badge ${ec.cls}`} style={{ fontSize:10 }}>{ec.label}</span>
                 {v.esUltimaVersion && <span className="badge badge-green" style={{ fontSize:9 }}>Versión actual</span>}
               </div>
-              <span style={{ fontSize:11, color:'var(--text-3)' }}>
-                {v.createdAt ? new Date(v.createdAt).toLocaleDateString('es-EC') : '—'}
-              </span>
+              <span style={{ fontSize:11, color:'var(--text-3)' }}>{v.createdAt ? new Date(v.createdAt).toLocaleDateString('es-EC') : '—'}</span>
             </div>
             <Link to={`/proyectos/${v._id}`} className="btn-secondary btn-xs">Ver</Link>
           </div>
@@ -76,16 +71,40 @@ function HistorialVersiones({ proyectoId }) {
   )
 }
 
+// ── Modal de publicación ──────────────────────────────────────────────────────
+function PublicarModal({ onConfirm, onCancel, loading }) {
+  return (
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.65)', zIndex:300, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
+      <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:20, width:'100%', maxWidth:440, padding:'1.75rem', boxShadow:'var(--shadow-lg)', animation:'slideUp 0.2s ease-out' }}>
+        <div style={{ fontSize:36, textAlign:'center', marginBottom:12 }}>🌐</div>
+        <h2 style={{ fontFamily:'Syne,sans-serif', fontSize:18, fontWeight:800, color:'var(--text-1)', textAlign:'center', margin:'0 0 10px' }}>¿Publicar este proyecto?</h2>
+        <p style={{ fontSize:13, color:'var(--text-2)', lineHeight:1.65, margin:'0 0 16px', textAlign:'center' }}>
+          Al publicar, el proyecto aparecerá en la página principal y será visible para todos.<br/><br/>
+          <strong>⚠️ Esta acción no se puede deshacer.</strong> Una vez publicado, no podrás despublicarlo.
+        </p>
+        <div style={{ display:'flex', gap:10 }}>
+          <button onClick={onConfirm} disabled={loading} className="btn-primary" style={{ flex:1 }}>
+            {loading ? 'Publicando...' : '🌐 Publicar ahora'}
+          </button>
+          <button onClick={onCancel} disabled={loading} className="btn-secondary" style={{ flex:1 }}>Cancelar</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function ProjectDetail() {
   const { id }   = useParams()
   const { user, isDocente } = useAuth()
-  const [project, setProject]     = useState(null)
-  const [loading, setLoading]     = useState(true)
-  const [comment, setComment]     = useState('')
-  const [colabs, setColabs]       = useState([])
+  const [project, setProject]         = useState(null)
+  const [loading, setLoading]         = useState(true)
+  const [comment, setComment]         = useState('')
+  const [colabs, setColabs]           = useState([])
   const [addColabEmail, setAddColabEmail] = useState('')
-  const [liked, setLiked]         = useState(false)
-  const [showHistorial, setShowHistorial]       = useState(false)
+  const [liked, setLiked]             = useState(false)
+  const [showHistorial, setShowHistorial] = useState(false)
+  const [showPublicarModal, setShowPublicarModal] = useState(false)
+  const [publicando, setPublicando]   = useState(false)
 
   const fetchProject = async () => {
     try {
@@ -139,6 +158,18 @@ export default function ProjectDetail() {
     catch { toast.error('Error') }
   }
 
+  const handlePublicar = async () => {
+    setPublicando(true)
+    try {
+      await api.put(`/proyectos/${id}/publicar`)
+      toast.success('¡Proyecto publicado! Ahora es visible en la página principal.')
+      setShowPublicarModal(false)
+      fetchProject()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error al publicar')
+    } finally { setPublicando(false) }
+  }
+
   if (loading) return <Spinner />
   if (!project) return <div style={{ textAlign:'center', padding:'5rem', color:'var(--text-3)' }}>Proyecto no encontrado</div>
 
@@ -146,35 +177,40 @@ export default function ProjectDetail() {
   const isColaborador = !isAuthor && colabs.some(c => (c._id || c) === user?._id)
   const esMiembro     = isAuthor || isColaborador
 
-  // Lógica de edición
-  const tipo = project.tipoProyecto || (project.publico ? 'publico' : 'privado')
-  const est  = project.estado
-  const esUltima = project.esUltimaVersion !== false
+  const enviarAlAdmin = project.enviarAlAdmin ?? false
+  const esPublico     = project.publico ?? false
+  const est           = project.estado
+  const esUltima      = project.esUltimaVersion !== false
 
+  // Lógica de edición (basada en enviarAlAdmin en lugar de tipoProyecto)
   let puedeEditarBoton = false
   let tooltipEdit = ''
   if (!esUltima) {
     tooltipEdit = 'Solo se puede editar la última versión del proyecto.'
-  } else if (tipo === 'privado' && (est === 'pendiente' || est === 'rechazado')) {
+  } else if (!enviarAlAdmin && (est === 'pendiente' || est === 'rechazado')) {
     puedeEditarBoton = true
-  } else if (tipo === 'publico' && est === 'rechazado') {
+  } else if (enviarAlAdmin && est === 'rechazado') {
     puedeEditarBoton = true
-  } else if (tipo === 'publico' && (est === 'pendiente' || est === 'aprobado')) {
-    tooltipEdit = 'Los proyectos públicos no se pueden modificar una vez enviados.'
-  } else if (tipo === 'privado' && est === 'aprobado') {
+  } else if (enviarAlAdmin && (est === 'pendiente' || est === 'aprobado')) {
+    tooltipEdit = 'Los proyectos enviados al admin no se pueden modificar una vez pendientes o aprobados.'
+  } else if (!enviarAlAdmin && est === 'aprobado') {
     tooltipEdit = 'No se puede editar un proyecto aprobado.'
   }
 
   const mostrarEditar = esMiembro
-  // Solo autor + público + aprobado + última versión puede crear nueva versión
-  const puedeNuevaVersion = isAuthor && esUltima && tipo === 'publico' && est === 'aprobado'
+  // Solo autor + enviarAlAdmin + aprobado + última versión puede crear nueva versión
+  const puedeNuevaVersion = isAuthor && esUltima && enviarAlAdmin && est === 'aprobado'
+  // Solo autor + aprobado + enviarAlAdmin + no publicado aún
+  const puedePublicar = isAuthor && esUltima && enviarAlAdmin && est === 'aprobado' && !esPublico
 
-  const estadoConfig = { aprobado: { label:'Aprobado', cls:'badge-green' }, pendiente: { label:'Pendiente', cls:'badge-yellow' }, rechazado: { label:'Rechazado', cls:'badge-red' } }
+  const estadoConfig = {
+    aprobado:  { label:'Aprobado',  cls:'badge-green' },
+    pendiente: { label:'Pendiente', cls:'badge-yellow' },
+    rechazado: { label:'Rechazado', cls:'badge-red' },
+  }
   const ec     = estadoConfig[est] || { label:est, cls:'badge-gray' }
   const likes  = project.likes || []
   const verStr = project.version ? `v${String(project.version).padStart(3,'0')}` : null
-  const tipoBadge = tipo === 'publico' ? 'badge-green' : 'badge-gray'
-  const tipoLabel = tipo === 'publico' ? '🌐 Público' : '🔒 Privado'
 
   return (
     <div className="page" style={{ animation:'slideUp 0.4s ease-out' }}>
@@ -186,12 +222,32 @@ export default function ProjectDetail() {
         </div>
       )}
 
-      {/* Banner: proyecto rechazado (vista estudiante) */}
+      {/* Banner: proyecto rechazado */}
       {esMiembro && est === 'rechazado' && (
         <div style={{ background:'var(--danger-l)', border:'1px solid var(--danger)', borderRadius:12, padding:'10px 16px', marginBottom:'1rem', fontSize:13, color:'var(--danger)', fontWeight:600 }}>
           ⚠️ Tu proyecto fue rechazado.
           {project.motivoRechazo && ` Motivo: ${project.motivoRechazo}.`}
           {puedeEditarBoton ? ' Puedes editarlo, corregirlo y volver a enviarlo.' : ''}
+        </div>
+      )}
+
+      {/* Banner: aprobado, puede publicar */}
+      {puedePublicar && (
+        <div style={{ background:'var(--success-l, #f0fdf4)', border:'1px solid var(--success, #22c55e)', borderRadius:12, padding:'12px 16px', marginBottom:'1rem', display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
+          <div>
+            <p style={{ fontSize:13, fontWeight:700, color:'var(--success, #16a34a)', margin:0 }}>🎉 ¡Proyecto aprobado!</p>
+            <p style={{ fontSize:12, color:'var(--text-2)', margin:'2px 0 0' }}>Puedes publicarlo para que aparezca en la página principal.</p>
+          </div>
+          <button onClick={() => setShowPublicarModal(true)} className="btn-primary btn-sm">
+            🌐 Publicar proyecto
+          </button>
+        </div>
+      )}
+
+      {/* Badge de publicado */}
+      {esPublico && (
+        <div style={{ background:'var(--primary-l)', border:'1px solid var(--primary)', borderRadius:12, padding:'8px 16px', marginBottom:'1rem', fontSize:13, color:'var(--primary)', fontWeight:600 }}>
+          🌐 Este proyecto está publicado y visible en la landing page.
         </div>
       )}
 
@@ -217,7 +273,8 @@ export default function ProjectDetail() {
                 {project.titulo}
               </h1>
               <span className={`badge ${ec.cls}`}>{ec.label}</span>
-              <span className={`badge ${tipoBadge}`}>{tipoLabel}</span>
+              {enviarAlAdmin && <span className="badge badge-blue">📤 Enviado al admin</span>}
+              {esPublico && <span className="badge badge-green">🌐 Publicado</span>}
               {verStr && <span className="badge badge-blue">{verStr}</span>}
               {project.proyecto_id && (
                 <span style={{ fontSize:11, color:'var(--text-3)', fontWeight:600, background:'var(--surface2)', border:'1px solid var(--border)', borderRadius:5, padding:'2px 7px' }}>
@@ -259,6 +316,13 @@ export default function ProjectDetail() {
               </Link>
             )}
 
+            {/* Botón Publicar */}
+            {puedePublicar && (
+              <button onClick={() => setShowPublicarModal(true)} className="btn-primary btn-sm">
+                🌐 Publicar
+              </button>
+            )}
+
             {project.proyecto_id && (
               <button onClick={() => setShowHistorial(h => !h)} className="btn-secondary btn-sm">
                 📋 {showHistorial ? 'Ocultar historial' : 'Ver versiones'}
@@ -298,9 +362,7 @@ export default function ProjectDetail() {
               </form>
             )}
             <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-              {(project.comentarios || []).length === 0 && (
-                <p style={{ fontSize:13, color:'var(--text-3)', padding:'1rem 0' }}>Sin comentarios aún.</p>
-              )}
+              {(project.comentarios || []).length === 0 && <p style={{ fontSize:13, color:'var(--text-3)', padding:'1rem 0' }}>Sin comentarios aún.</p>}
               {(project.comentarios || []).map(c => (
                 <div key={c._id} style={{ background:'var(--surface2)', border:'1px solid var(--border)', borderRadius:10, padding:'10px 14px', display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:10 }}>
                   <div>
@@ -349,7 +411,7 @@ export default function ProjectDetail() {
 
           {/* Colaboradores */}
           {(() => {
-            const esPublicoAprobado = project.estado === 'aprobado' && tipo === 'publico'
+            const esPublicoAprobado = project.estado === 'aprobado' && esPublico
             const tieneAccesoPrivado = isAuthor || isColaborador || user?.rol === 'admin'
             const puedeVerColabs = esPublicoAprobado || tieneAccesoPrivado
             if (!puedeVerColabs) return null
@@ -381,6 +443,13 @@ export default function ProjectDetail() {
         </div>
       </div>
 
+      {showPublicarModal && (
+        <PublicarModal
+          onConfirm={handlePublicar}
+          onCancel={() => setShowPublicarModal(false)}
+          loading={publicando}
+        />
+      )}
     </div>
   )
 }
