@@ -157,9 +157,13 @@ export default function AdminProjects() {
   }
 
   const desactivar = (p) => {
-    // El admin solo puede desactivar proyectos pendientes o rechazados
+    // El admin solo puede desactivar proyectos pendientes o rechazados Y no públicos
     if (p.estado === 'aprobado') {
       toast.error('No se puede desactivar un proyecto aprobado. Solo se pueden desactivar proyectos pendientes o rechazados.')
+      return
+    }
+    if (p.publico === true) {
+      toast.error('No se puede desactivar un proyecto que ya está publicado.')
       return
     }
     setConfirmModal({
@@ -256,8 +260,8 @@ export default function AdminProjects() {
                 const ec      = estadoConfig[p.estado] || { label: p.estado, cls:'badge-gray' }
                 const verStr  = p.version ? `v${String(p.version).padStart(3,'0')}` : null
                 const inactivo = p.activo === false
-                // El admin SOLO puede desactivar pendientes y rechazados
-                const puedeDesactivar = p.activo !== false && p.estado !== 'aprobado'
+                // El admin SOLO puede desactivar pendientes/rechazados Y no publicados
+                const puedeDesactivar = p.activo !== false && p.estado !== 'aprobado' && p.publico !== true
 
                 return (
                   <div key={p._id} style={{
@@ -326,7 +330,7 @@ export default function AdminProjects() {
                         <button
                           onClick={() => desactivar(p)}
                           disabled={!puedeDesactivar}
-                          title={!puedeDesactivar ? 'Solo se pueden desactivar proyectos pendientes o rechazados' : 'Desactivar proyecto'}
+                          title={!puedeDesactivar ? (p.estado === 'aprobado' ? 'No se pueden desactivar proyectos aprobados' : p.publico ? 'No se pueden desactivar proyectos publicados' : 'Ya está desactivado') : 'Desactivar proyecto'}
                           style={{ padding:'4px 10px', borderRadius:6, fontSize:12, fontWeight:600, cursor: puedeDesactivar ? 'pointer' : 'not-allowed', background: puedeDesactivar ? 'var(--warning-l)' : 'var(--surface2)', color: puedeDesactivar ? 'var(--warning)' : 'var(--text-3)', border: `1px solid ${puedeDesactivar ? 'var(--warning)' : 'var(--border)'}`, opacity: puedeDesactivar ? 1 : 0.5 }}>
                           ⏸ Desactivar
                         </button>
