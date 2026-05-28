@@ -242,7 +242,7 @@ export default function EditProject() {
                 <p style={{ fontSize:11, color:'var(--text-3)', margin:0 }}>{docActual.size ? `${(docActual.size / 1024).toFixed(1)} KB` : ''} · Subido {docActual.uploadDate ? new Date(docActual.uploadDate).toLocaleDateString('es-EC') : ''}</p>
               </div>
               <div style={{ display:'flex', gap:6 }}>
-                <a href={`${import.meta.env.VITE_API_URL || ''}/api/proyectos/${id}/documento`} target="_blank" rel="noreferrer"
+                <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/proyectos/${id}/documento`} target="_blank" rel="noreferrer"
                   style={{ fontSize:12, fontWeight:600, color:'var(--primary)', background:'var(--primary-l)', border:'1px solid var(--primary)', borderRadius:7, padding:'4px 10px', textDecoration:'none' }}>
                   Ver
                 </a>
