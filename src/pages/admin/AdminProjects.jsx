@@ -10,7 +10,6 @@ const estadoConfig = {
   rechazado: { label: 'Rechazado', cls: 'badge-red' },
 }
 
-// ── Modal de confirmación ─────────────────────────────────────────────────────
 function ConfirmModal({ config, onClose }) {
   if (!config) return null
   return (
@@ -28,7 +27,6 @@ function ConfirmModal({ config, onClose }) {
   )
 }
 
-// ── Modal Rechazo ─────────────────────────────────────────────────────────────
 function RejectModal({ modal, onChange, onConfirm, onClose }) {
   if (!modal) return null
   return (
@@ -37,9 +35,8 @@ function RejectModal({ modal, onChange, onConfirm, onClose }) {
       <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:20, padding:'1.75rem', width:'100%', maxWidth:420, boxShadow:'var(--shadow-lg)', animation:'slideUp 0.2s ease-out' }}>
         <h2 style={{ fontFamily:'Syne,sans-serif', fontSize:18, fontWeight:800, color:'var(--text-1)', margin:'0 0 4px' }}>Rechazar proyecto</h2>
         <p style={{ fontSize:13, color:'var(--text-3)', margin:'0 0 10px' }}>Puedes indicar el motivo del rechazo (opcional).</p>
-        {/* Info: el autor podrá corregir y reenviar */}
         <div style={{ background:'var(--primary-l)', border:'1px solid var(--primary)', borderRadius:10, padding:'10px 14px', fontSize:12, color:'var(--primary)', marginBottom:'1rem', lineHeight:1.55 }}>
-          ℹ️ Al rechazar, el autor del proyecto podrá editarlo y volver a enviarlo para revisión.
+          ℹ️ Al rechazar, el autor podrá editarlo y volver a enviarlo para revisión.
         </div>
         <textarea value={modal.motivo} onChange={e => onChange(e.target.value)}
           rows={3} className="input" style={{ resize:'none', marginBottom:14 }} placeholder="Motivo del rechazo..." />
@@ -52,7 +49,6 @@ function RejectModal({ modal, onChange, onConfirm, onClose }) {
   )
 }
 
-// ── Historial de Versiones Modal ──────────────────────────────────────────────
 function VersionesModal({ proyectoId, onClose }) {
   const [versiones, setVersiones] = useState([])
   const [loading, setLoading]     = useState(true)
@@ -110,14 +106,14 @@ export default function AdminProjects() {
   const [projects, setProjects]     = useState([])
   const [loading, setLoading]       = useState(true)
   const [filtro, setFiltro]         = useState('')
-  const [filtroActivo, setFiltroActivo] = useState('true') // 'true' | 'false' | ''
+  const [filtroActivo, setFiltroActivo] = useState('true')
   const [categoria, setCategoria]   = useState('')
   const [autor, setAutor]           = useState(autorParam)
   const [page, setPage]             = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [rejectModal, setRejectModal] = useState(null)
   const [confirmModal, setConfirmModal] = useState(null)
-  const [versionesModal, setVersionesModal] = useState(null) // proyecto_id
+  const [versionesModal, setVersionesModal] = useState(null)
 
   useEffect(() => {
     if (!autorParam) return
@@ -144,29 +140,39 @@ export default function AdminProjects() {
   useEffect(() => { fetchProjects() }, [page, filtro, categoria, autor, filtroActivo])
 
   const approve = async (id) => {
-    try { await api.put(`/admin/proyectos/${id}/aprobar`); toast.success('Proyecto aprobado'); fetchProjects() }
-    catch { toast.error('Error al aprobar') }
+    try {
+      await api.put(`/admin/proyectos/${id}/aprobar`)
+      toast.success('Proyecto aprobado. El autor ya puede publicarlo en la landing page.')
+      fetchProjects()
+    } catch (err) { toast.error(err.response?.data?.message || 'Error al aprobar') }
   }
 
   const reject = async () => {
     try {
       await api.put(`/admin/proyectos/${rejectModal.id}/rechazar`, { motivo: rejectModal.motivo })
-      toast.success('Proyecto rechazado'); setRejectModal(null); fetchProjects()
+      toast.success('Proyecto rechazado')
+      setRejectModal(null)
+      fetchProjects()
     } catch { toast.error('Error al rechazar') }
   }
 
   const desactivar = (p) => {
+    // El admin solo puede desactivar proyectos pendientes o rechazados
+    if (p.estado === 'aprobado') {
+      toast.error('No se puede desactivar un proyecto aprobado. Solo se pueden desactivar proyectos pendientes o rechazados.')
+      return
+    }
     setConfirmModal({
       title: '⚠️ ¿Desactivar este proyecto?',
-      message: 'El proyecto dejará de ser visible en la landing page y en las búsquedas. Esta acción afecta todas las versiones del proyecto. Podrás reactivarlo cuando lo desees.',
+      message: `Este proyecto está en estado "${p.estado}". Al desactivarlo dejará de ser visible. Podrás reactivarlo cuando lo desees.`,
       confirmLabel: 'Desactivar',
       danger: false,
       onConfirm: async () => {
         try {
           await api.put(`/admin/proyectos/${p._id}/desactivar`)
-          toast.success('Proyecto desactivado. Todas las versiones han sido desactivadas.')
+          toast.success('Proyecto desactivado.')
           fetchProjects()
-        } catch { toast.error('Error al desactivar') }
+        } catch (err) { toast.error(err.response?.data?.message || 'Error al desactivar') }
         setConfirmModal(null)
       }
     })
@@ -181,9 +187,9 @@ export default function AdminProjects() {
       onConfirm: async () => {
         try {
           await api.put(`/admin/proyectos/${p._id}/reactivar`)
-          toast.success('Proyecto reactivado exitosamente.')
+          toast.success('Proyecto reactivado.')
           fetchProjects()
-        } catch { toast.error('Error al reactivar') }
+        } catch (err) { toast.error(err.response?.data?.message || 'Error al reactivar') }
         setConfirmModal(null)
       }
     })
@@ -194,12 +200,11 @@ export default function AdminProjects() {
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'1.5rem', flexWrap:'wrap', gap:12 }}>
         <div>
           <h1 style={{ fontFamily:'Syne,sans-serif', fontSize:26, fontWeight:800, color:'var(--text-1)', margin:'0 0 4px', letterSpacing:'-0.03em' }}>Gestión de Proyectos</h1>
-          <p style={{ fontSize:13, color:'var(--text-3)', margin:0 }}>{projects.length} resultado(s) · Solo proyectos públicos</p>
+          <p style={{ fontSize:13, color:'var(--text-3)', margin:0 }}>{projects.length} resultado(s) · Solo proyectos enviados al admin</p>
         </div>
         <Link to="/admin" className="btn-secondary btn-sm">← Admin</Link>
       </div>
 
-      {/* Banner autor */}
       {autor && (
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', background:'var(--primary-l)', border:'1px solid var(--primary)', borderRadius:10, padding:'10px 14px', marginBottom:'1rem', fontSize:13 }}>
           <span style={{ color:'var(--primary)', fontWeight:600 }}>
@@ -209,7 +214,7 @@ export default function AdminProjects() {
         </div>
       )}
 
-      {/* Filtros */}
+      {/* Filtros estado */}
       <div style={{ display:'flex', gap:8, marginBottom:'1rem', flexWrap:'wrap', alignItems:'center' }}>
         {[['','Todos'],['pendiente','Pendientes'],['aprobado','Aprobados'],['rechazado','Rechazados']].map(([v,l]) => (
           <button key={v} onClick={() => { setFiltro(v); setPage(1) }} style={{
@@ -248,9 +253,11 @@ export default function AdminProjects() {
           ) : (
             <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
               {projects.map(p => {
-                const ec = estadoConfig[p.estado] || { label: p.estado, cls:'badge-gray' }
-                const verStr = p.version ? `v${String(p.version).padStart(3,'0')}` : null
+                const ec      = estadoConfig[p.estado] || { label: p.estado, cls:'badge-gray' }
+                const verStr  = p.version ? `v${String(p.version).padStart(3,'0')}` : null
                 const inactivo = p.activo === false
+                // El admin SOLO puede desactivar pendientes y rechazados
+                const puedeDesactivar = p.activo !== false && p.estado !== 'aprobado'
 
                 return (
                   <div key={p._id} style={{
@@ -271,7 +278,8 @@ export default function AdminProjects() {
                         <span style={{ fontFamily:'Syne,sans-serif', fontWeight:700, fontSize:14, color:'var(--text-1)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{p.titulo}</span>
                         <span className={`badge ${ec.cls}`}>{ec.label}</span>
                         <span className="badge badge-blue" style={{ fontSize:10 }}>{p.categoria}</span>
-                        <span className="badge badge-green" style={{ fontSize:10 }}>🌐 Público</span>
+                        <span className="badge badge-blue" style={{ fontSize:10 }}>📤 Enviado al admin</span>
+                        {p.publico && <span className="badge badge-green" style={{ fontSize:10 }}>🌐 Publicado</span>}
                         {verStr && <span className="badge badge-blue" style={{ fontSize:10 }}>{verStr}</span>}
                         {p.proyecto_id && <span style={{ fontSize:10, color:'var(--text-3)', fontWeight:600 }}>#{p.proyecto_id}</span>}
                         {inactivo && <span className="badge badge-red" style={{ fontSize:10 }}>● Inactivo</span>}
@@ -286,10 +294,9 @@ export default function AdminProjects() {
                       {p.estado === 'rechazado' && p.motivoRechazo && (
                         <p style={{ fontSize:11, color:'var(--danger)', margin:'3px 0 0' }}>⚠️ {p.motivoRechazo}</p>
                       )}
-                      {/* Banner: proyecto rechazado — puede estar siendo corregido */}
-                      {p.estado === 'rechazado' && (
+                      {p.estado === 'aprobado' && !p.publico && (
                         <div style={{ marginTop:5, fontSize:11, color:'var(--primary)', background:'var(--primary-l)', borderRadius:6, padding:'4px 8px', display:'inline-block' }}>
-                          🔄 Este proyecto fue rechazado. El autor puede estar corrigiendo y reenviando una nueva revisión.
+                          ✅ Aprobado — el autor puede publicarlo en la landing page cuando lo desee.
                         </div>
                       )}
                     </div>
@@ -298,21 +305,29 @@ export default function AdminProjects() {
                       <Link to={`/proyectos/${p._id}`} className="btn-secondary btn-xs">Ver</Link>
 
                       {p.proyecto_id && (
-                        <button onClick={() => setVersionesModal(p.proyecto_id)} className="btn-secondary btn-xs" title="Ver historial de versiones">
+                        <button onClick={() => setVersionesModal(p.proyecto_id)} className="btn-secondary btn-xs">
                           📋 Versiones
                         </button>
                       )}
 
                       {p.estado !== 'aprobado' && (
-                        <button onClick={() => approve(p._id)} style={{ padding:'4px 10px', borderRadius:6, fontSize:12, fontWeight:600, cursor:'pointer', background:'var(--success-l)', color:'var(--success)', border:'1px solid var(--success)' }}>✅ Aprobar</button>
+                        <button onClick={() => approve(p._id)} style={{ padding:'4px 10px', borderRadius:6, fontSize:12, fontWeight:600, cursor:'pointer', background:'var(--success-l)', color:'var(--success)', border:'1px solid var(--success)' }}>
+                          ✅ Aprobar
+                        </button>
                       )}
                       {p.estado !== 'rechazado' && (
-                        <button onClick={() => setRejectModal({ id:p._id, motivo:'' })} style={{ padding:'4px 10px', borderRadius:6, fontSize:12, fontWeight:600, cursor:'pointer', background:'var(--danger-l)', color:'var(--danger)', border:'1px solid var(--danger)' }}>❌ Rechazar</button>
+                        <button onClick={() => setRejectModal({ id:p._id, motivo:'' })} style={{ padding:'4px 10px', borderRadius:6, fontSize:12, fontWeight:600, cursor:'pointer', background:'var(--danger-l)', color:'var(--danger)', border:'1px solid var(--danger)' }}>
+                          ❌ Rechazar
+                        </button>
                       )}
 
-                      {/* Desactivar / Reactivar en lugar de Eliminar */}
+                      {/* Desactivar solo si pendiente o rechazado */}
                       {p.activo !== false ? (
-                        <button onClick={() => desactivar(p)} style={{ padding:'4px 10px', borderRadius:6, fontSize:12, fontWeight:600, cursor:'pointer', background:'var(--warning-l)', color:'var(--warning)', border:'1px solid var(--warning)' }}>
+                        <button
+                          onClick={() => desactivar(p)}
+                          disabled={!puedeDesactivar}
+                          title={!puedeDesactivar ? 'Solo se pueden desactivar proyectos pendientes o rechazados' : 'Desactivar proyecto'}
+                          style={{ padding:'4px 10px', borderRadius:6, fontSize:12, fontWeight:600, cursor: puedeDesactivar ? 'pointer' : 'not-allowed', background: puedeDesactivar ? 'var(--warning-l)' : 'var(--surface2)', color: puedeDesactivar ? 'var(--warning)' : 'var(--text-3)', border: `1px solid ${puedeDesactivar ? 'var(--warning)' : 'var(--border)'}`, opacity: puedeDesactivar ? 1 : 0.5 }}>
                           ⏸ Desactivar
                         </button>
                       ) : (
@@ -337,22 +352,14 @@ export default function AdminProjects() {
         </>
       )}
 
-      {/* Modales */}
       <RejectModal
         modal={rejectModal}
         onChange={motivo => setRejectModal(r => ({ ...r, motivo }))}
         onConfirm={reject}
         onClose={() => setRejectModal(null)}
       />
-
-      <ConfirmModal
-        config={confirmModal}
-        onClose={() => setConfirmModal(null)}
-      />
-
-      {versionesModal && (
-        <VersionesModal proyectoId={versionesModal} onClose={() => setVersionesModal(null)} />
-      )}
+      <ConfirmModal config={confirmModal} onClose={() => setConfirmModal(null)} />
+      {versionesModal && <VersionesModal proyectoId={versionesModal} onClose={() => setVersionesModal(null)} />}
     </div>
   )
 }
