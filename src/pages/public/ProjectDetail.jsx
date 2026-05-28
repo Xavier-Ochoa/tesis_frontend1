@@ -416,11 +416,11 @@ export default function ProjectDetail() {
                   </div>
                 </div>
                 <div style={{ display:'flex', gap:6, marginTop:8 }}>
-                  <a href={`${import.meta.env.VITE_API_URL || ''}/api/proyectos/${id}/documento`} target="_blank" rel="noreferrer"
+                  <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/proyectos/${id}/documento`} target="_blank" rel="noreferrer"
                     style={{ flex:1, textAlign:'center', fontSize:12, fontWeight:600, color:'var(--primary)', background:'var(--primary-l)', border:'1px solid var(--primary)', borderRadius:8, padding:'7px 10px', textDecoration:'none' }}>
                     👁 Ver PDF
                   </a>
-                  <a href={`${import.meta.env.VITE_API_URL || ''}/api/proyectos/${id}/documento`} download={doc.filename}
+                  <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/proyectos/${id}/documento`} download={doc.filename}
                     style={{ flex:1, textAlign:'center', fontSize:12, fontWeight:600, color:'var(--text-2)', background:'var(--surface)', border:'1px solid var(--border)', borderRadius:8, padding:'7px 10px', textDecoration:'none' }}>
                     ⬇ Descargar
                   </a>
