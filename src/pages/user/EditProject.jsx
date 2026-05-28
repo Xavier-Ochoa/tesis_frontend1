@@ -46,6 +46,22 @@ export default function EditProject() {
   const [docActual, setDocActual]         = useState(null)   // doc guardado en BD
   const [nuevoDoc, setNuevoDoc]           = useState(null)   // nuevo archivo a subir
   const [eliminandoDoc, setEliminandoDoc] = useState(false)
+  const [viendoPdf, setViendoPdf] = useState(false)
+
+  const verPDF = async () => {
+    setViendoPdf(true)
+    try {
+      const resp = await api.get(`/proyectos/${id}/documento`, { responseType: 'blob' })
+      const blob = new Blob([resp.data], { type: 'application/pdf' })
+      const url  = URL.createObjectURL(blob)
+      window.open(url, '_blank')
+      setTimeout(() => URL.revokeObjectURL(url), 60000)
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error al obtener el documento')
+    } finally {
+      setViendoPdf(false)
+    }
+  }
   const [loading, setLoading]             = useState(true)
   const [saving, setSaving]               = useState(false)
   const [deletingIdx, setDeletingIdx]     = useState(null)
@@ -242,10 +258,10 @@ export default function EditProject() {
                 <p style={{ fontSize:11, color:'var(--text-3)', margin:0 }}>{docActual.size ? `${(docActual.size / 1024).toFixed(1)} KB` : ''} · Subido {docActual.uploadDate ? new Date(docActual.uploadDate).toLocaleDateString('es-EC') : ''}</p>
               </div>
               <div style={{ display:'flex', gap:6 }}>
-                <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/proyectos/${id}/documento`} target="_blank" rel="noreferrer"
-                  style={{ fontSize:12, fontWeight:600, color:'var(--primary)', background:'var(--primary-l)', border:'1px solid var(--primary)', borderRadius:7, padding:'4px 10px', textDecoration:'none' }}>
-                  Ver
-                </a>
+                <button type="button" onClick={verPDF} disabled={viendoPdf}
+                  style={{ fontSize:12, fontWeight:600, color:'var(--primary)', background:'var(--primary-l)', border:'1px solid var(--primary)', borderRadius:7, padding:'4px 10px', cursor:'pointer', opacity: viendoPdf ? 0.6 : 1 }}>
+                  {viendoPdf ? '...' : 'Ver'}
+                </button>
                 <button type="button" disabled={eliminandoDoc} onClick={async () => {
                   if (!confirm('¿Eliminar el documento PDF?')) return
                   setEliminandoDoc(true)
