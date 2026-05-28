@@ -1,7 +1,7 @@
 /**
  * pages/admin/AdminChat.jsx
  * ─────────────────────────────────────────────────────────────────────────────
- * Panel de chat del administrador — estilo Messenger.
+ * Panel de chat del administrador — estilo Messenger, tema coherente con la app.
  * La lógica HTTP y Pusher se mantiene exactamente igual que antes.
  */
 
@@ -23,8 +23,9 @@ function MensajeBurbuja({ mensaje }) {
     <div style={{ display:'flex', flexDirection:'column', alignItems: esAdmin ? 'flex-end' : 'flex-start', marginBottom:2 }}>
       <div style={{
         maxWidth:'72%',
-        background: esAdmin ? '#0084ff' : '#f0f0f0',
-        color: esAdmin ? '#fff' : '#050505',
+        background: esAdmin ? 'var(--primary)' : 'var(--surface2)',
+        color: esAdmin ? '#fff' : 'var(--text-1)',
+        border: esAdmin ? 'none' : '1px solid var(--border)',
         borderRadius: esAdmin ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
         padding:'9px 13px',
         fontSize:14,
@@ -34,7 +35,7 @@ function MensajeBurbuja({ mensaje }) {
       }}>
         {mensaje.texto}
       </div>
-      <span style={{ fontSize:10, color:'#8a8d91', marginTop:2, paddingInline:3 }}>{hora}</span>
+      <span style={{ fontSize:10, color:'var(--text-3)', marginTop:2, paddingInline:3 }}>{hora}</span>
     </div>
   )
 }
@@ -53,19 +54,20 @@ function ConversacionItem({ conv, activa, onClick }) {
         padding:'10px 12px',
         cursor:'pointer',
         display:'flex', alignItems:'center', gap:10,
-        background: activa ? '#e7f3ff' : 'transparent',
+        background: activa ? 'var(--primary-l)' : 'transparent',
         borderRadius:10,
         margin:'2px 6px',
+        borderLeft: activa ? '3px solid var(--primary)' : '3px solid transparent',
         transition:'background 0.15s',
       }}
-      onMouseEnter={e => { if (!activa) e.currentTarget.style.background = '#f5f5f5' }}
+      onMouseEnter={e => { if (!activa) e.currentTarget.style.background = 'var(--surface2)' }}
       onMouseLeave={e => { if (!activa) e.currentTarget.style.background = 'transparent' }}
     >
       {/* Avatar */}
       <div style={{
         width:44, height:44, borderRadius:'50%', flexShrink:0,
-        background: activa ? '#0084ff' : '#d8d8d8',
-        color: activa ? '#fff' : '#555',
+        background: activa ? 'var(--primary)' : 'var(--border2)',
+        color: activa ? '#fff' : 'var(--text-2)',
         display:'flex', alignItems:'center', justifyContent:'center',
         fontSize:15, fontWeight:700, fontFamily:'Syne,sans-serif',
         transition:'background 0.15s',
@@ -75,17 +77,17 @@ function ConversacionItem({ conv, activa, onClick }) {
 
       <div style={{ flex:1, minWidth:0 }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:4 }}>
-          <p style={{ margin:0, fontSize:14, fontWeight: conv.sinLeer > 0 ? 700 : 600, color:'#050505', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:130 }}>
+          <p style={{ margin:0, fontSize:14, fontWeight: conv.sinLeer > 0 ? 700 : 600, color:'var(--text-1)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:130 }}>
             {conv.nombre} {conv.apellido}
           </p>
-          <span style={{ fontSize:11, color:'#8a8d91', flexShrink:0 }}>{fecha}</span>
+          <span style={{ fontSize:11, color:'var(--text-3)', flexShrink:0 }}>{fecha}</span>
         </div>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:4 }}>
-          <p style={{ margin:0, fontSize:12, color: conv.sinLeer > 0 ? '#050505' : '#8a8d91', fontWeight: conv.sinLeer > 0 ? 600 : 400, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:150 }}>
+          <p style={{ margin:0, fontSize:12, color: conv.sinLeer > 0 ? 'var(--text-1)' : 'var(--text-3)', fontWeight: conv.sinLeer > 0 ? 600 : 400, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:150 }}>
             {conv.ultimoMensaje || 'Sin mensajes'}
           </p>
           {conv.sinLeer > 0 && (
-            <span style={{ background:'#0084ff', color:'#fff', borderRadius:10, padding:'1px 7px', fontSize:11, fontWeight:700, flexShrink:0 }}>
+            <span style={{ background:'var(--primary)', color:'#fff', borderRadius:10, padding:'1px 7px', fontSize:11, fontWeight:700, flexShrink:0 }}>
               {conv.sinLeer}
             </span>
           )}
@@ -199,30 +201,30 @@ export default function AdminChat() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="page" style={{ animation:'slideUp 0.4s ease-out', padding:0 }}>
+    <div className="page" style={{ animation:'slideUp 0.4s ease-out' }}>
       <style>{`
-        .admin-msg-input::placeholder { color:#bcc0c4 }
+        .admin-msg-input::placeholder { color:var(--text-3) }
         .admin-msg-input:focus { outline:none }
-        .admin-send-btn:hover:not(:disabled) { background:#006ddb !important }
+        .admin-send-btn:hover:not(:disabled) { opacity:0.85 }
         .admin-send-btn:disabled { opacity:0.4; cursor:default }
         .conv-scroll::-webkit-scrollbar { width:4px }
         .conv-scroll::-webkit-scrollbar-track { background:transparent }
-        .conv-scroll::-webkit-scrollbar-thumb { background:#d0d0d0; border-radius:4px }
+        .conv-scroll::-webkit-scrollbar-thumb { background:var(--border2); border-radius:4px }
         .msgs-scroll::-webkit-scrollbar { width:5px }
         .msgs-scroll::-webkit-scrollbar-track { background:transparent }
-        .msgs-scroll::-webkit-scrollbar-thumb { background:#e0e0e0; border-radius:4px }
+        .msgs-scroll::-webkit-scrollbar-thumb { background:var(--border2); border-radius:4px }
       `}</style>
 
       {/* ── Cabecera ── */}
-      <div style={{ padding:'20px 24px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:8, flexWrap:'wrap' }}>
+      <div style={{ marginBottom:'1.25rem', display:'flex', alignItems:'center', justifyContent:'space-between', gap:8, flexWrap:'wrap' }}>
         <div>
-          <h1 style={{ fontFamily:'Syne,sans-serif', fontSize:22, fontWeight:800, color:'var(--text-1)', margin:'0 0 2px', letterSpacing:'-0.03em' }}>
+          <h1 style={{ fontFamily:'Syne,sans-serif', fontSize:24, fontWeight:800, color:'var(--text-1)', margin:'0 0 2px', letterSpacing:'-0.03em' }}>
             💬 Chat — Panel Admin
           </h1>
           <p style={{ fontSize:13, color:'var(--text-3)', margin:0 }}>Conversaciones en tiempo real con usuarios</p>
         </div>
         {totalNoLeidos > 0 && (
-          <div style={{ background:'#0084ff', color:'#fff', borderRadius:20, padding:'4px 14px', fontSize:13, fontWeight:700 }}>
+          <div style={{ background:'var(--primary)', color:'#fff', borderRadius:20, padding:'4px 14px', fontSize:13, fontWeight:700 }}>
             {totalNoLeidos} sin leer
           </div>
         )}
@@ -231,27 +233,26 @@ export default function AdminChat() {
       {/* ── Layout Messenger ── */}
       <div style={{
         display:'grid', gridTemplateColumns:'300px 1fr',
-        height:'calc(100vh - 190px)', minHeight:440,
-        margin:'0 0 0 0',
-        background:'#fff',
-        border:'1px solid #e4e6ea',
+        height:'calc(100vh - 210px)', minHeight:440,
+        background:'var(--surface)',
+        border:'1px solid var(--border)',
         borderRadius:16,
         overflow:'hidden',
-        boxShadow:'0 2px 12px rgba(0,0,0,0.07)',
+        boxShadow:'var(--shadow-lg)',
       }}>
 
         {/* ── Sidebar: lista de conversaciones ── */}
-        <div style={{ borderRight:'1px solid #e4e6ea', display:'flex', flexDirection:'column', background:'#fff' }}>
+        <div style={{ borderRight:'1px solid var(--border)', display:'flex', flexDirection:'column', background:'var(--surface)' }}>
 
           {/* Buscador decorativo */}
           <div style={{ padding:'12px 12px 8px' }}>
-            <div style={{ background:'#f0f2f5', borderRadius:20, padding:'7px 14px', fontSize:14, color:'#8a8d91', display:'flex', alignItems:'center', gap:6 }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="#8a8d91" strokeWidth="2"/><path d="M21 21l-4.35-4.35" stroke="#8a8d91" strokeWidth="2" strokeLinecap="round"/></svg>
-              Buscar en Mensajes
+            <div style={{ background:'var(--surface2)', border:'1px solid var(--border)', borderRadius:20, padding:'7px 14px', fontSize:13, color:'var(--text-3)', display:'flex', alignItems:'center', gap:6 }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="var(--text-3)" strokeWidth="2"/><path d="M21 21l-4.35-4.35" stroke="var(--text-3)" strokeWidth="2" strokeLinecap="round"/></svg>
+              Buscar conversación
             </div>
           </div>
 
-          <p style={{ fontSize:11, fontWeight:700, color:'#8a8d91', textTransform:'uppercase', letterSpacing:'0.06em', padding:'4px 18px 6px', margin:0 }}>
+          <p style={{ fontSize:11, fontWeight:700, color:'var(--text-3)', textTransform:'uppercase', letterSpacing:'0.06em', padding:'4px 18px 6px', margin:0 }}>
             Conversaciones
           </p>
 
@@ -259,7 +260,7 @@ export default function AdminChat() {
             {cargandoLista ? (
               <div style={{ padding:24, textAlign:'center' }}><Spinner /></div>
             ) : conversaciones.length === 0 ? (
-              <p style={{ padding:24, fontSize:13, color:'#8a8d91', textAlign:'center' }}>Sin conversaciones aún</p>
+              <p style={{ padding:24, fontSize:13, color:'var(--text-3)', textAlign:'center' }}>Sin conversaciones aún</p>
             ) : (
               conversaciones.map((conv) => (
                 <ConversacionItem
@@ -274,19 +275,19 @@ export default function AdminChat() {
         </div>
 
         {/* ── Panel de chat ── */}
-        <div style={{ display:'flex', flexDirection:'column', background:'#fff' }}>
+        <div style={{ display:'flex', flexDirection:'column', background:'var(--bg)' }}>
 
           {/* Header del chat activo */}
           {selectedUserInfo ? (
             <div style={{
               padding:'10px 16px',
-              borderBottom:'1px solid #e4e6ea',
+              borderBottom:'1px solid var(--border)',
               display:'flex', alignItems:'center', gap:10,
-              background:'#fff',
+              background:'var(--surface)',
             }}>
               <div style={{
                 width:38, height:38, borderRadius:'50%',
-                background:'#0084ff',
+                background:'var(--primary)',
                 color:'#fff',
                 display:'flex', alignItems:'center', justifyContent:'center',
                 fontSize:14, fontWeight:700, fontFamily:'Syne,sans-serif', flexShrink:0,
@@ -294,15 +295,15 @@ export default function AdminChat() {
                 {`${selectedUserInfo.nombre?.[0] || ''}${selectedUserInfo.apellido?.[0] || ''}`.toUpperCase() || '👤'}
               </div>
               <div>
-                <p style={{ margin:0, fontSize:14, fontWeight:700, color:'#050505', fontFamily:'Syne,sans-serif' }}>
+                <p style={{ margin:0, fontSize:14, fontWeight:700, color:'var(--text-1)', fontFamily:'Syne,sans-serif' }}>
                   {selectedUserInfo.nombre} {selectedUserInfo.apellido}
                 </p>
-                <p style={{ margin:0, fontSize:12, color:'#8a8d91' }}>{selectedUserInfo.email}</p>
+                <p style={{ margin:0, fontSize:12, color:'var(--text-3)' }}>{selectedUserInfo.email}</p>
               </div>
             </div>
           ) : (
-            <div style={{ padding:'10px 16px', borderBottom:'1px solid #e4e6ea', height:59, display:'flex', alignItems:'center' }}>
-              <p style={{ margin:0, fontSize:14, color:'#8a8d91' }}>Selecciona una conversación</p>
+            <div style={{ padding:'10px 16px', borderBottom:'1px solid var(--border)', height:59, display:'flex', alignItems:'center', background:'var(--surface)' }}>
+              <p style={{ margin:0, fontSize:14, color:'var(--text-3)' }}>Selecciona una conversación</p>
             </div>
           )}
 
@@ -311,13 +312,12 @@ export default function AdminChat() {
             flex:1, overflowY:'auto',
             padding:'16px 16px 8px',
             display:'flex', flexDirection:'column', gap:6,
-            background:'#fff',
           }}>
             {!selectedUserId && (
-              <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:10, color:'#8a8d91', paddingTop:60 }}>
-                <svg width="56" height="56" viewBox="0 0 24 24" fill="#d0d0d0"><path d="M12 2C6.477 2 2 6.145 2 11.243c0 2.921 1.406 5.53 3.608 7.28V22l3.37-1.853A10.8 10.8 0 0012 20.486c5.523 0 10-4.145 10-9.243S17.523 2 12 2z"/></svg>
-                <p style={{ fontSize:14, margin:0, fontWeight:600 }}>Elige una conversación</p>
-                <p style={{ fontSize:12, margin:0 }}>Selecciona un usuario de la lista para ver sus mensajes</p>
+              <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:10, color:'var(--text-3)', paddingTop:60 }}>
+                <span style={{ fontSize:48 }}>💬</span>
+                <p style={{ fontSize:14, margin:0, fontWeight:600, color:'var(--text-2)' }}>Elige una conversación</p>
+                <p style={{ fontSize:12, margin:0, color:'var(--text-3)' }}>Selecciona un usuario de la lista para ver sus mensajes</p>
               </div>
             )}
 
@@ -336,9 +336,9 @@ export default function AdminChat() {
           {selectedUserId && (
             <div style={{
               padding:'8px 12px',
-              borderTop:'1px solid #e4e6ea',
+              borderTop:'1px solid var(--border)',
               display:'flex', alignItems:'flex-end', gap:8,
-              background:'#fff',
+              background:'var(--surface)',
               flexShrink:0,
             }}>
               <textarea
@@ -346,13 +346,13 @@ export default function AdminChat() {
                 value={inputTexto}
                 onChange={(e) => setInputTexto(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Aa"
+                placeholder="Escribe tu respuesta… (Enter para enviar)"
                 rows={1}
                 maxLength={2000}
                 style={{
                   flex:1, resize:'none',
-                  border:'none',
-                  background:'#f0f2f5',
+                  border:'1px solid var(--border)',
+                  background:'var(--surface2)',
                   borderRadius:20,
                   padding:'9px 16px',
                   fontSize:14,
@@ -360,7 +360,7 @@ export default function AdminChat() {
                   lineHeight:1.45,
                   maxHeight:90,
                   overflowY:'auto',
-                  color:'#050505',
+                  color:'var(--text-1)',
                 }}
                 onInput={e => {
                   e.target.style.height = 'auto'
@@ -371,12 +371,12 @@ export default function AdminChat() {
                 className="admin-send-btn"
                 onClick={handleResponder}
                 disabled={!inputTexto.trim() || enviando}
+                className="btn-primary"
                 style={{
                   width:36, height:36, borderRadius:'50%',
-                  background:'#0084ff', border:'none', cursor:'pointer',
-                  color:'#fff', fontSize:16,
+                  border:'none', cursor:'pointer',
                   display:'flex', alignItems:'center', justifyContent:'center',
-                  flexShrink:0, transition:'background 0.15s',
+                  flexShrink:0, fontSize:16, padding:0,
                 }}
               >
                 {enviando ? '…' : '➤'}
