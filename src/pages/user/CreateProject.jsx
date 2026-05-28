@@ -118,6 +118,7 @@ export default function CreateProject() {
   const [showConfirmEnviar, setShowConfirmEnviar] = useState(false)
   const [images, setImages]           = useState([])
   const [previews, setPreviews]       = useState([])
+  const [documento, setDocumento]     = useState(null)
   const [loading, setLoading]         = useState(false)
   const [showAI, setShowAI]           = useState(false)
 
@@ -155,6 +156,7 @@ export default function CreateProject() {
       Object.entries(form).forEach(([k, v]) => { if (v !== '') fd.append(k, v) })
       fd.append('enviarAlAdmin', enviarAlAdmin ? 'true' : 'false')
       images.forEach(img => fd.append('imagenes', img))
+      if (documento) fd.append('documento', documento)
       const { data } = await api.post('/proyectos', fd)
       const proyectoId = data.data?.proyecto_id || data.proyecto_id || ''
       const version    = data.data?.version || data.version || '001'
@@ -209,6 +211,37 @@ export default function CreateProject() {
             </div>
           )}
           <input id="imgs-create" type="file" accept="image/*" multiple style={{ display:'none' }} onChange={handleImages} />
+        </div>
+
+        {/* ── Documento PDF ── */}
+        <div>
+          <label className="label" style={{ display:'flex', alignItems:'center' }}>
+            Documento PDF
+            <FieldHint text="Opcional. Sube el documento principal del proyecto (máx. 10MB). Solo archivos PDF." />
+          </label>
+          {documento ? (
+            <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', borderRadius:12, background:'var(--surface2)', border:'1px solid var(--primary)' }}>
+              <span style={{ fontSize:20 }}>📄</span>
+              <div style={{ flex:1, minWidth:0 }}>
+                <p style={{ fontSize:13, fontWeight:600, color:'var(--text-1)', margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{documento.name}</p>
+                <p style={{ fontSize:11, color:'var(--text-3)', margin:0 }}>{(documento.size / 1024).toFixed(1)} KB</p>
+              </div>
+              <button type="button" onClick={() => setDocumento(null)} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--danger)', fontSize:18, padding:'0 4px', flexShrink:0 }}>×</button>
+            </div>
+          ) : (
+            <div onClick={() => document.getElementById('pdf-create').click()}
+              style={{ border:'2px dashed var(--border2)', borderRadius:12, padding:'1.25rem', textAlign:'center', cursor:'pointer', background:'var(--surface2)', transition:'border-color 0.2s' }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary)'}
+              onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border2)'}>
+              <p style={{ fontSize:24, margin:'0 0 4px' }}>📄</p>
+              <p style={{ fontSize:13, color:'var(--text-3)', margin:0 }}>Haz clic para adjuntar un PDF</p>
+            </div>
+          )}
+          <input id="pdf-create" type="file" accept="application/pdf" style={{ display:'none' }} onChange={e => {
+            const f = e.target.files?.[0]
+            if (f) { if (f.size > 10 * 1024 * 1024) { toast.error('El PDF no debe superar los 10MB.'); return } setDocumento(f) }
+            e.target.value = ''
+          }} />
         </div>
 
         {/* Título + IA */}
