@@ -17,7 +17,6 @@ const TABS = [
   { id: 'colaboradores', label: '👥 Colaboradores' },
 ]
 
-// ── Modal de confirmación genérico ────────────────────────────────────────────
 function ConfirmModal({ config, onConfirm, onClose }) {
   if (!config) return null
   return (
@@ -35,7 +34,6 @@ function ConfirmModal({ config, onConfirm, onClose }) {
   )
 }
 
-
 export default function MyProjects() {
   const { user } = useAuth()
   const navigate   = useNavigate()
@@ -43,14 +41,14 @@ export default function MyProjects() {
   const [projects, setProjects]     = useState([])
   const [loading, setLoading]       = useState(true)
   const [filtroEstado, setFiltroEstado] = useState('')
-  const [filtroTipo, setFiltroTipo]     = useState('')
+  const [filtroEnviar, setFiltroEnviar] = useState('')
   const [selectedProject, setSelectedProject] = useState(null)
   const [confirmModal, setConfirmModal] = useState(null)
 
   const fetchProjects = () => {
     const params = {}
     if (filtroEstado) params.estado = filtroEstado
-    if (filtroTipo)   params.tipoProyecto = filtroTipo
+    if (filtroEnviar !== '') params.enviarAlAdmin = filtroEnviar
     api.get('/proyectos/usuario/mis-proyectos', { params })
       .then(r => {
         const data = r.data?.data || []
@@ -61,14 +59,12 @@ export default function MyProjects() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { fetchProjects() }, [filtroEstado, filtroTipo])
+  useEffect(() => { fetchProjects() }, [filtroEstado, filtroEnviar])
 
-  // Solo proyectos privados pueden ser eliminados por el estudiante/docente
-  // Los públicos solo el admin puede desactivarlos desde su panel
   const handleDelete = (p) => {
     setConfirmModal({
       title: '⚠️ ¿Eliminar proyecto permanentemente?',
-      message: 'Esta acción no se puede deshacer. El proyecto y todas sus versiones serán eliminados definitivamente, incluyendo imágenes y archivos.',
+      message: 'Esta acción no se puede deshacer. El proyecto y todas sus versiones serán eliminados definitivamente.',
       confirmLabel: 'Eliminar permanentemente',
       danger: true,
       onConfirm: async () => {
@@ -77,36 +73,42 @@ export default function MyProjects() {
           toast.success('Proyecto eliminado permanentemente.')
           if (selectedProject?._id === p._id) setSelectedProject(null)
           fetchProjects()
-        } catch { toast.error('No se pudo eliminar') }
+        } catch (err) { toast.error(err.response?.data?.message || 'No se pudo eliminar') }
         setConfirmModal(null)
       }
     })
   }
 
-  // Determinar si mostrar botón Editar
+  // Editar según enviarAlAdmin
   const puedeEditar = (p) => {
     if (p.esUltimaVersion === false) return false
-    const tipo = p.tipoProyecto
-    const est  = p.estado
-    if (tipo === 'privado') return est === 'pendiente' || est === 'rechazado'
-    if (tipo === 'publico') return est === 'rechazado'
+    const env = p.enviarAlAdmin ?? false
+    const est = p.estado
+    if (!env) return est === 'pendiente' || est === 'rechazado'
+    if (env)  return est === 'rechazado'
     return false
   }
 
   const tooltipEditar = (p) => {
     if (p.esUltimaVersion === false) return 'Solo se puede editar la última versión del proyecto.'
-    if (p.tipoProyecto === 'publico' && (p.estado === 'pendiente' || p.estado === 'aprobado'))
-      return 'Los proyectos públicos no se pueden modificar una vez enviados.'
-    if (p.tipoProyecto === 'privado' && p.estado === 'aprobado')
+    if (p.enviarAlAdmin && (p.estado === 'pendiente' || p.estado === 'aprobado'))
+      return 'Los proyectos enviados al admin no se pueden modificar una vez pendientes o aprobados.'
+    if (!p.enviarAlAdmin && p.estado === 'aprobado')
       return 'No se puede editar un proyecto aprobado.'
     return ''
   }
 
-  // Solo público + aprobado + última versión + autor puede crear nueva versión
   const puedeNuevaVersion = (p) =>
     p.esUltimaVersion === true &&
-    p.tipoProyecto === 'publico' &&
+    (p.enviarAlAdmin ?? false) &&
     p.estado === 'aprobado' &&
+    p.rolEnProyecto === 'autor'
+
+  const puedePublicar = (p) =>
+    p.esUltimaVersion === true &&
+    (p.enviarAlAdmin ?? false) &&
+    p.estado === 'aprobado' &&
+    !(p.publico ?? false) &&
     p.rolEnProyecto === 'autor'
 
   if (loading) return <Spinner />
@@ -117,9 +119,7 @@ export default function MyProjects() {
       {/* Header */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'1.25rem', flexWrap:'wrap', gap:12 }}>
         <div>
-          <h1 style={{ fontFamily:'Syne,sans-serif', fontSize:26, fontWeight:800, color:'var(--text-1)', margin:'0 0 4px', letterSpacing:'-0.03em' }}>
-            Mis Proyectos
-          </h1>
+          <h1 style={{ fontFamily:'Syne,sans-serif', fontSize:26, fontWeight:800, color:'var(--text-1)', margin:'0 0 4px', letterSpacing:'-0.03em' }}>Mis Proyectos</h1>
           <p style={{ fontSize:13, color:'var(--text-3)', margin:0 }}>{projects.length} proyecto(s)</p>
         </div>
         <Link to="/mis-proyectos/nuevo" className="btn-primary">+ Nuevo</Link>
@@ -143,7 +143,6 @@ export default function MyProjects() {
         <>
           {/* Filtros */}
           <div style={{ display:'flex', gap:8, marginBottom:'1.5rem', flexWrap:'wrap' }}>
-            {/* Filtro por estado */}
             {[['', 'Todos'], ['pendiente', 'Pendientes'], ['aprobado', 'Aprobados'], ['rechazado', 'Rechazados']].map(([v, l]) => (
               <button key={v} onClick={() => setFiltroEstado(v)} style={{
                 padding:'6px 14px', borderRadius:100, fontSize:13, fontWeight:500, cursor:'pointer', transition:'all 0.15s',
@@ -152,15 +151,14 @@ export default function MyProjects() {
                 border: `1px solid ${filtroEstado === v ? 'var(--primary)' : 'var(--border2)'}`,
               }}>{l}</button>
             ))}
-            {/* Filtro por tipoProyecto */}
             <div style={{ display:'flex', gap:6, marginLeft:'auto', alignItems:'center' }}>
-              <span style={{ fontSize:12, color:'var(--text-3)', fontWeight:500 }}>Tipo:</span>
-              {[['', 'Todos'], ['publico', 'Público'], ['privado', 'Privado']].map(([v, l]) => (
-                <button key={v} onClick={() => setFiltroTipo(v)} style={{
+              <span style={{ fontSize:12, color:'var(--text-3)', fontWeight:500 }}>Envío admin:</span>
+              {[['', 'Todos'], ['true', 'Enviados'], ['false', 'No enviados']].map(([v, l]) => (
+                <button key={v} onClick={() => setFiltroEnviar(v)} style={{
                   padding:'5px 12px', borderRadius:100, fontSize:12, fontWeight:500, cursor:'pointer', transition:'all 0.15s',
-                  background: filtroTipo === v ? 'var(--text-1)' : 'var(--surface)',
-                  color: filtroTipo === v ? 'var(--bg)' : 'var(--text-2)',
-                  border: `1px solid ${filtroTipo === v ? 'var(--text-1)' : 'var(--border2)'}`,
+                  background: filtroEnviar === v ? 'var(--text-1)' : 'var(--surface)',
+                  color: filtroEnviar === v ? 'var(--bg)' : 'var(--text-2)',
+                  border: `1px solid ${filtroEnviar === v ? 'var(--text-1)' : 'var(--border2)'}`,
                 }}>{l}</button>
               ))}
             </div>
@@ -180,8 +178,9 @@ export default function MyProjects() {
                 const canEdit  = puedeEditar(p)
                 const editTip  = tooltipEditar(p)
                 const canVer   = puedeNuevaVersion(p)
-                const tipoBadge = p.tipoProyecto === 'publico' ? 'badge-green' : 'badge-gray'
-                const tipoLabel = p.tipoProyecto === 'publico' ? '🌐 Público' : '🔒 Privado'
+                const canPub   = puedePublicar(p)
+                const yaEnviado = p.enviarAlAdmin ?? false
+                const yaPublicado = p.publico ?? false
                 const verStr    = p.version ? `v${String(p.version).padStart(3,'0')}` : null
 
                 return (
@@ -191,7 +190,6 @@ export default function MyProjects() {
                     display:'flex', alignItems:'center', gap:14, flexWrap:'wrap',
                     opacity: p.esUltimaVersion === false ? 0.8 : 1,
                   }}>
-                    {/* Thumbnail */}
                     {p.imagenes?.[0] ? (
                       <img src={p.imagenes[0]} alt={p.titulo} style={{ width:60, height:60, objectFit:'cover', borderRadius:10, flexShrink:0 }} />
                     ) : (
@@ -200,23 +198,21 @@ export default function MyProjects() {
                       </div>
                     )}
 
-                    {/* Info */}
                     <div style={{ flex:1, minWidth:0 }}>
                       <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap', marginBottom:3 }}>
                         <span style={{ fontFamily:'Syne,sans-serif', fontWeight:700, fontSize:15, color:'var(--text-1)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
                           {p.titulo}
                         </span>
                         <span className={`badge ${ec.cls}`}>{ec.label}</span>
-                        <span className={`badge ${tipoBadge}`} style={{ fontSize:10 }}>{tipoLabel}</span>
+                        {yaEnviado
+                          ? <span className="badge badge-blue" style={{ fontSize:10 }}>📤 Env. admin</span>
+                          : <span className="badge badge-gray" style={{ fontSize:10 }}>🔒 Privado</span>}
+                        {yaPublicado && <span className="badge badge-green" style={{ fontSize:10 }}>🌐 Publicado</span>}
                         {verStr && <span className="badge badge-blue" style={{ fontSize:10 }}>{verStr}</span>}
                         {p.proyecto_id && <span style={{ fontSize:10, color:'var(--text-3)', fontWeight:600 }}>#{p.proyecto_id}</span>}
-                        {p.esUltimaVersion === false && (
-                          <span className="badge badge-yellow" style={{ fontSize:10 }}>🕒 Versión anterior</span>
-                        )}
+                        {p.esUltimaVersion === false && <span className="badge badge-yellow" style={{ fontSize:10 }}>🕒 Versión anterior</span>}
                       </div>
-                      <p style={{ fontSize:13, color:'var(--text-3)', margin:'0 0 4px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                        {p.descripcion}
-                      </p>
+                      <p style={{ fontSize:13, color:'var(--text-3)', margin:'0 0 4px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{p.descripcion}</p>
                       <div style={{ display:'flex', gap:12, fontSize:12, color:'var(--text-3)' }}>
                         <span>❤️ {p.likes?.length || 0}</span>
                         <span>💬 {p.comentarios?.length || 0}</span>
@@ -229,7 +225,6 @@ export default function MyProjects() {
                       )}
                     </div>
 
-                    {/* Actions */}
                     <div style={{ display:'flex', gap:6, flexShrink:0, flexWrap:'wrap' }}>
                       <Link to={`/proyectos/${p._id}`} className="btn-secondary btn-sm">Ver</Link>
 
@@ -242,18 +237,24 @@ export default function MyProjects() {
                       )}
 
                       {canVer && (
-                        <button onClick={() => navigate(`/mis-proyectos/${p._id}/nueva-version`)} className="btn-secondary btn-sm" title="Crear nueva versión de este proyecto">
+                        <button onClick={() => navigate(`/mis-proyectos/${p._id}/nueva-version`)} className="btn-secondary btn-sm">
                           🔖 Nueva versión
                         </button>
                       )}
 
+                      {canPub && (
+                        <Link to={`/proyectos/${p._id}`} className="btn-primary btn-sm" title="Publicar en la landing page">
+                          🌐 Publicar
+                        </Link>
+                      )}
+
                       {user?.rol === 'docente' && (
-                        <button onClick={() => { setSelectedProject(p); setActiveTab('colaboradores') }} className="btn-secondary btn-sm" title="Gestionar colaboradores">
+                        <button onClick={() => { setSelectedProject(p); setActiveTab('colaboradores') }} className="btn-secondary btn-sm">
                           👥 Equipo
                         </button>
                       )}
 
-                      {p.tipoProyecto === 'privado' && (
+                      {!yaEnviado && (
                         <button onClick={() => handleDelete(p)} className="btn-danger btn-sm" title="Eliminar proyecto permanentemente">
                           🗑️ Eliminar
                         </button>
@@ -267,18 +268,13 @@ export default function MyProjects() {
         </>
       )}
 
-      {/* TAB: Colaboradores */}
-      {activeTab === 'colaboradores' && (
-        <ColaboradoresTab />
-      )}
+      {activeTab === 'colaboradores' && <ColaboradoresTab />}
 
-      {/* Modales */}
       <ConfirmModal
         config={confirmModal}
         onConfirm={confirmModal?.onConfirm}
         onClose={() => setConfirmModal(null)}
       />
-
     </div>
   )
 }
