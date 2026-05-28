@@ -59,7 +59,7 @@ export default function App() {
           <Route path="/admin"           element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/admin/proyectos" element={<AdminRoute><AdminProjects /></AdminRoute>} />
           <Route path="/admin/usuarios"  element={<AdminRoute><AdminUsers /></AdminRoute>} />
-          <Route path="/admin/chat"      element={<AdminRoute><AdminChat /></AdminRoute>} />
+          <Route path="/admin/chat"      element={<AdminRoute><Navigate to="/admin" replace /></AdminRoute>} />
 
           {/* 404 */}
           <Route path="*" element={
@@ -74,8 +74,10 @@ export default function App() {
       <footer style={{ borderTop:'1px solid var(--border)', padding:'1rem 1.5rem', textAlign:'center', fontSize:12, color:'var(--text-3)', background:'var(--surface)' }}>
         POLIESFOT — Escuela Politécnica Nacional © {new Date().getFullYear()}
       </footer>
-      {/* Widget de chat flotante — solo para usuarios autenticados no-admin */}
+      {/* Widget de chat flotante — usuarios no-admin */}
       {user && !esAdmin && <Chat />}
+      {/* Widget de chat flotante — admin */}
+      {user && esAdmin && <AdminChat />}
     </div>
   )
 }
