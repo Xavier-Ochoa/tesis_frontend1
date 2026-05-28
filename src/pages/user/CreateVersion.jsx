@@ -7,27 +7,22 @@ import Spinner from '../../components/Spinner'
 
 const MAX_IMAGENES = 5
 const CARRERAS = [
-  'Agua y Saneamiento Ambiental',
-  'Desarrollo de Software',
-  'Electromecánica',
-  'Redes y Telecomunicaciones',
-  'Procesamiento de Alimentos',
-  'Procesamiento Industrial de la Madera',
+  'Agua y Saneamiento Ambiental','Desarrollo de Software','Electromecánica',
+  'Redes y Telecomunicaciones','Procesamiento de Alimentos','Procesamiento Industrial de la Madera',
 ]
 
 export default function CreateVersion() {
-  const { id }   = useParams()   // _id de la versión actual (última)
+  const { id }   = useParams()
   const navigate = useNavigate()
 
   const [proyectoBase, setProyectoBase] = useState(null)
   const [form, setForm]                 = useState(null)
-  const [keepImages, setKeepImages]     = useState([])   // URLs de imágenes actuales
-  const [newImages, setNewImages]       = useState([])   // archivos nuevos
+  const [keepImages, setKeepImages]     = useState([])
+  const [newImages, setNewImages]       = useState([])
   const [newPreviews, setNewPreviews]   = useState([])
   const [loading, setLoading]           = useState(true)
   const [saving, setSaving]             = useState(false)
 
-  // Cargar proyecto base y pre-llenar formulario
   useEffect(() => {
     api.get(`/proyectos/${id}`)
       .then(r => {
@@ -39,7 +34,6 @@ export default function CreateVersion() {
           descripcion:        p.descripcion        || '',
           categoria:          p.categoria          || 'academico',
           carrera:            p.carrera            || '',
-          tipoProyecto:       p.tipoProyecto       || 'publico',
           lineaInvestigacion: p.lineaInvestigacion || '',
           tecnologias:        Array.isArray(p.tecnologias) ? p.tecnologias.join(', ') : '',
           repositorio:        p.repositorio        || '',
@@ -49,30 +43,16 @@ export default function CreateVersion() {
           fechaFin:           p.fechaFin    ? p.fechaFin.slice(0, 10)    : '',
         })
       })
-      .catch(() => {
-        toast.error('No se pudo cargar el proyecto')
-        navigate('/mis-proyectos')
-      })
+      .catch(() => { toast.error('No se pudo cargar el proyecto'); navigate('/mis-proyectos') })
       .finally(() => setLoading(false))
   }, [id])
 
-  const handle = e => {
-    const { name, value } = e.target
-    // El tipo no puede cambiarse a privado si ya es público
-    if (name === 'tipoProyecto' && value === 'privado') {
-      toast.error('Un proyecto público no puede cambiarse a privado.')
-      return
-    }
-    setForm({ ...form, [name]: value })
-  }
+  const handle = e => setForm({ ...form, [e.target.name]: e.target.value })
 
   const handleNewImages = e => {
     const files = Array.from(e.target.files || [])
     const total = newImages.length + files.length
-    if (total > MAX_IMAGENES) {
-      toast.error(`Máximo ${MAX_IMAGENES} imágenes nuevas.`)
-      return
-    }
+    if (total > MAX_IMAGENES) { toast.error(`Máximo ${MAX_IMAGENES} imágenes nuevas.`); return }
     const nuevas = files.slice(0, MAX_IMAGENES - newImages.length)
     setNewImages(prev => [...prev, ...nuevas])
     setNewPreviews(prev => [...prev, ...nuevas.map(f => URL.createObjectURL(f))])
@@ -85,14 +65,11 @@ export default function CreateVersion() {
   }
 
   const submit = async e => {
-    e.preventDefault()
-    setSaving(true)
+    e.preventDefault(); setSaving(true)
     try {
       const fd = new FormData()
       Object.entries(form).forEach(([k, v]) => { if (v !== '') fd.append(k, v) })
-      // Si el usuario subió imágenes nuevas las enviamos; si no, el backend copia las actuales
       newImages.forEach(img => fd.append('imagenes', img))
-
       const { data } = await api.post(`/proyectos/${id}/versiones`, fd)
       const newId = data.data?._id || data._id
       const ver   = data.version || data.data?.version || ''
@@ -102,132 +79,94 @@ export default function CreateVersion() {
       const errores = err.response?.data?.errors || err.response?.data?.errores
       if (errores) errores.forEach(e => toast.error(e.mensaje || e.message || e))
       else toast.error(err.response?.data?.message || 'Error al crear la versión')
-    } finally {
-      setSaving(false)
-    }
+    } finally { setSaving(false) }
   }
 
   if (loading || !form) return <Spinner />
 
   const totalNewImages = newImages.length
-  const verActual = proyectoBase?.version
-    ? `v${String(proyectoBase.version).padStart(3, '0')}`
-    : ''
+  const verActual = proyectoBase?.version ? `v${String(proyectoBase.version).padStart(3, '0')}` : ''
 
   return (
-    <div className="page" style={{ maxWidth: 680, animation: 'slideUp 0.4s ease-out' }}>
+    <div className="page" style={{ maxWidth:680, animation:'slideUp 0.4s ease-out' }}>
 
-      {/* Header */}
-      <div style={{ marginBottom: '1.75rem' }}>
-        <h1 style={{ fontFamily: 'Syne,sans-serif', fontSize: 26, fontWeight: 800, color: 'var(--text-1)', margin: '0 0 6px', letterSpacing: '-0.03em' }}>
+      <div style={{ marginBottom:'1.75rem' }}>
+        <h1 style={{ fontFamily:'Syne,sans-serif', fontSize:26, fontWeight:800, color:'var(--text-1)', margin:'0 0 6px', letterSpacing:'-0.03em' }}>
           🔖 Nueva versión
         </h1>
-
-        {/* Info del proyecto base */}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
+        <div style={{ display:'flex', gap:8, flexWrap:'wrap', alignItems:'center', marginBottom:10 }}>
           {proyectoBase?.proyecto_id && (
-            <span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 600, background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 6, padding: '3px 8px' }}>
+            <span style={{ fontSize:12, color:'var(--text-3)', fontWeight:600, background:'var(--surface2)', border:'1px solid var(--border)', borderRadius:6, padding:'3px 8px' }}>
               #{proyectoBase.proyecto_id}
             </span>
           )}
-          {verActual && (
-            <span className="badge badge-blue" style={{ fontSize: 11 }}>
-              Basado en {verActual}
-            </span>
-          )}
+          {verActual && <span className="badge badge-blue" style={{ fontSize:11 }}>Basado en {verActual}</span>}
+          <span className="badge badge-blue" style={{ fontSize:11 }}>📤 Enviado al admin</span>
         </div>
-
-        {/* Aviso informativo */}
-        <div style={{ background: 'var(--primary-l)', border: '1px solid var(--primary)', borderRadius: 10, padding: '10px 14px', fontSize: 13, color: 'var(--primary)', lineHeight: 1.6 }}>
-          ℹ️ Los campos están pre-cargados con la versión actual. Modifica lo que necesites y haz clic en <strong>Crear nueva versión</strong>. La versión anterior quedará bloqueada y la nueva quedará <strong>pendiente de revisión</strong>.
+        <div style={{ background:'var(--primary-l)', border:'1px solid var(--primary)', borderRadius:10, padding:'10px 14px', fontSize:13, color:'var(--primary)', lineHeight:1.6 }}>
+          ℹ️ Los campos están pre-cargados con la versión actual. Modifica lo que necesites. La versión anterior quedará bloqueada y la nueva quedará <strong>pendiente de revisión</strong>.
         </div>
       </div>
 
-      <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      <form onSubmit={submit} style={{ display:'flex', flexDirection:'column', gap:'1.25rem' }}>
 
-        {/* ── Imágenes ── */}
+        {/* Imágenes */}
         <div>
-          <label className="label" style={{ display: 'flex', alignItems: 'center' }}>
+          <label className="label" style={{ display:'flex', alignItems:'center' }}>
             Imágenes de la nueva versión
-            <FieldHint text="Sube imágenes nuevas si quieres reemplazar las actuales. Si no subes nada, se copian las imágenes de la versión anterior." />
-            <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-3)', fontWeight: 400 }}>
-              {totalNewImages}/{MAX_IMAGENES} nuevas
-            </span>
+            <FieldHint text="Si no subes imágenes, se copian las de la versión anterior." />
+            <span style={{ marginLeft:'auto', fontSize:11, color:'var(--text-3)', fontWeight:400 }}>{totalNewImages}/{MAX_IMAGENES} nuevas</span>
           </label>
-
-          {/* Imágenes actuales (solo visual, referencia) */}
           {keepImages.length > 0 && (
-            <div style={{ marginBottom: 10 }}>
-              <p style={{ fontSize: 11, color: 'var(--text-3)', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>
-                Imágenes actuales (se copian si no subes nuevas)
-              </p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: 8 }}>
+            <div style={{ marginBottom:10 }}>
+              <p style={{ fontSize:11, color:'var(--text-3)', margin:'0 0 6px', textTransform:'uppercase', letterSpacing:'0.06em', fontWeight:600 }}>Imágenes actuales (se copian si no subes nuevas)</p>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(90px, 1fr))', gap:8 }}>
                 {keepImages.map((src, i) => (
-                  <div key={i} style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', aspectRatio: '1', border: '1px solid var(--border)', opacity: 0.6 }}>
-                    <img src={src} alt={`actual-${i}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    {i === 0 && (
-                      <span style={{ position: 'absolute', bottom: 4, left: 4, fontSize: 9, fontWeight: 700, background: 'var(--primary)', color: 'white', padding: '2px 5px', borderRadius: 4 }}>PORTADA</span>
-                    )}
+                  <div key={i} style={{ position:'relative', borderRadius:10, overflow:'hidden', aspectRatio:'1', border:'1px solid var(--border)', opacity:0.6 }}>
+                    <img src={src} alt={`actual-${i}`} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                    {i === 0 && <span style={{ position:'absolute', bottom:4, left:4, fontSize:9, fontWeight:700, background:'var(--primary)', color:'white', padding:'2px 5px', borderRadius:4 }}>PORTADA</span>}
                   </div>
                 ))}
               </div>
             </div>
           )}
-
-          {/* Nuevas imágenes */}
           {newPreviews.length > 0 && (
-            <div style={{ marginBottom: 8 }}>
-              <p style={{ fontSize: 11, color: 'var(--primary)', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>
-                Nuevas imágenes (reemplazarán las actuales)
-              </p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: 8 }}>
+            <div style={{ marginBottom:8 }}>
+              <p style={{ fontSize:11, color:'var(--primary)', margin:'0 0 6px', textTransform:'uppercase', letterSpacing:'0.06em', fontWeight:600 }}>Nuevas imágenes (reemplazarán las actuales)</p>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(90px, 1fr))', gap:8 }}>
                 {newPreviews.map((src, i) => (
-                  <div key={i} style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', aspectRatio: '1', border: '2px dashed var(--primary)' }}>
-                    <img src={src} alt={`new-${i}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <div key={i} style={{ position:'relative', borderRadius:10, overflow:'hidden', aspectRatio:'1', border:'2px dashed var(--primary)' }}>
+                    <img src={src} alt={`new-${i}`} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
                     <button type="button" onClick={() => removeNewImage(i)}
-                      style={{ position: 'absolute', top: 4, right: 4, width: 20, height: 20, borderRadius: '50%', background: 'rgba(0,0,0,0.7)', color: 'white', border: 'none', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      ×
-                    </button>
+                      style={{ position:'absolute', top:4, right:4, width:20, height:20, borderRadius:'50%', background:'rgba(0,0,0,0.7)', color:'white', border:'none', cursor:'pointer', fontSize:12, display:'flex', alignItems:'center', justifyContent:'center' }}>×</button>
                   </div>
                 ))}
               </div>
             </div>
           )}
-
           {totalNewImages < MAX_IMAGENES && (
             <div onClick={() => document.getElementById('imgs-version').click()}
-              style={{ border: '2px dashed var(--border2)', borderRadius: 12, padding: '1rem', textAlign: 'center', cursor: 'pointer', background: 'var(--surface2)', transition: 'border-color 0.2s' }}
+              style={{ border:'2px dashed var(--border2)', borderRadius:12, padding:'1rem', textAlign:'center', cursor:'pointer', background:'var(--surface2)', transition:'border-color 0.2s' }}
               onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary)'}
               onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border2)'}>
-              <p style={{ fontSize: 13, color: 'var(--text-3)', margin: 0 }}>
-                {totalNewImages === 0
-                  ? '🖼️ Haz clic para subir imágenes nuevas (opcional)'
-                  : `Agregar más (${MAX_IMAGENES - totalNewImages} restantes)`}
+              <p style={{ fontSize:13, color:'var(--text-3)', margin:0 }}>
+                {totalNewImages === 0 ? '🖼️ Haz clic para subir imágenes nuevas (opcional)' : `Agregar más (${MAX_IMAGENES - totalNewImages} restantes)`}
               </p>
             </div>
           )}
-          <input id="imgs-version" type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleNewImages} />
+          <input id="imgs-version" type="file" accept="image/*" multiple style={{ display:'none' }} onChange={handleNewImages} />
         </div>
 
-        {/* ── Título ── */}
         <div>
-          <label className="label" style={{ display: 'flex', alignItems: 'center' }}>
-            Título <FieldHint required text="Entre 5 y 200 caracteres." />
-          </label>
+          <label className="label" style={{ display:'flex', alignItems:'center' }}>Título <FieldHint required text="Entre 5 y 200 caracteres." /></label>
           <input name="titulo" required value={form.titulo} onChange={handle} className="input" />
         </div>
-
-        {/* ── Descripción ── */}
         <div>
-          <label className="label" style={{ display: 'flex', alignItems: 'center' }}>
-            Descripción <FieldHint required text="Entre 20 y 2000 caracteres." />
-          </label>
-          <textarea name="descripcion" required value={form.descripcion} onChange={handle} rows={4} className="input" style={{ resize: 'none' }} />
-          <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 3 }}>{form.descripcion.length}/2000</p>
+          <label className="label" style={{ display:'flex', alignItems:'center' }}>Descripción <FieldHint required text="Entre 20 y 2000 caracteres." /></label>
+          <textarea name="descripcion" required value={form.descripcion} onChange={handle} rows={4} className="input" style={{ resize:'none' }} />
+          <p style={{ fontSize:11, color:'var(--text-3)', marginTop:3 }}>{form.descripcion.length}/2000</p>
         </div>
-
-        {/* ── Categoría + Carrera ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
           <div>
             <label className="label">Categoría</label>
             <select name="categoria" value={form.categoria} onChange={handle} className="input">
@@ -236,18 +175,14 @@ export default function CreateVersion() {
             </select>
           </div>
           <div>
-            <label className="label" style={{ display: 'flex', alignItems: 'center' }}>
-              Carrera <FieldHint required text="Carrera a la que pertenece el proyecto." />
-            </label>
+            <label className="label" style={{ display:'flex', alignItems:'center' }}>Carrera <FieldHint required /></label>
             <select name="carrera" required value={form.carrera} onChange={handle} className="input">
               <option value="">Selecciona una carrera</option>
               {CARRERAS.map(c => <option key={c}>{c}</option>)}
             </select>
           </div>
         </div>
-
-        {/* ── Fechas ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
           <div>
             <label className="label">Fecha inicio</label>
             <input name="fechaInicio" type="date" value={form.fechaInicio} onChange={handle} className="input" />
@@ -257,25 +192,15 @@ export default function CreateVersion() {
             <input name="fechaFin" type="date" value={form.fechaFin} onChange={handle} className="input" />
           </div>
         </div>
-
-        {/* ── Tecnologías ── */}
         <div>
-          <label className="label" style={{ display: 'flex', alignItems: 'center' }}>
-            Tecnologías <FieldHint text="Separadas por coma." />
-          </label>
+          <label className="label" style={{ display:'flex', alignItems:'center' }}>Tecnologías <FieldHint text="Separadas por coma." /></label>
           <input name="tecnologias" value={form.tecnologias} onChange={handle} className="input" placeholder="React, Node.js, MongoDB" />
         </div>
-
-        {/* ── Línea de Investigación ── */}
         <div>
-          <label className="label" style={{ display: 'flex', alignItems: 'center' }}>
-            Línea de Investigación <FieldHint text="Área o materia relacionada. Opcional." />
-          </label>
+          <label className="label" style={{ display:'flex', alignItems:'center' }}>Línea de Investigación <FieldHint text="Opcional." /></label>
           <input name="lineaInvestigacion" value={form.lineaInvestigacion} onChange={handle} className="input" placeholder="Ej: Redes de Computadoras, Inteligencia Artificial..." />
         </div>
-
-        {/* ── Repositorio + Demo ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
           <div>
             <label className="label">Repositorio</label>
             <input name="repositorio" type="url" value={form.repositorio} onChange={handle} className="input" placeholder="https://github.com/..." />
@@ -285,35 +210,21 @@ export default function CreateVersion() {
             <input name="enlaceDemo" type="url" value={form.enlaceDemo} onChange={handle} className="input" placeholder="https://demo.vercel.app" />
           </div>
         </div>
-
-        {/* ── Tags ── */}
         <div>
-          <label className="label" style={{ display: 'flex', alignItems: 'center' }}>
-            Tags <FieldHint text="Palabras clave separadas por coma." />
-          </label>
+          <label className="label" style={{ display:'flex', alignItems:'center' }}>Tags <FieldHint text="Palabras clave separadas por coma." /></label>
           <input name="tags" value={form.tags} onChange={handle} className="input" placeholder="iot, python, redes" />
         </div>
 
-        {/* ── Tipo — solo lectura porque ya es público ── */}
-        <div>
-          <label className="label" style={{ display: 'flex', alignItems: 'center' }}>
-            Tipo de Proyecto
-            <FieldHint text="Los proyectos públicos no pueden cambiarse a privado." />
-          </label>
-          <input className="input" value="🌐 Público" readOnly style={{ background: 'var(--surface2)', cursor: 'not-allowed', opacity: 0.7 }} />
-          <p style={{ fontSize: 12, color: 'var(--warning)', marginTop: 5 }}>
-            ⚠️ Un proyecto público no puede convertirse en privado.
-          </p>
+        {/* Aviso: siempre se envía al admin */}
+        <div style={{ background:'var(--primary-l)', border:'1px solid var(--primary)', borderRadius:12, padding:'10px 14px', fontSize:13, color:'var(--primary)' }}>
+          📤 Esta nueva versión será enviada automáticamente al administrador para revisión.
         </div>
 
-        {/* ── Botones ── */}
-        <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
-          <button type="submit" disabled={saving} className="btn-primary btn-lg" style={{ flex: 1 }}>
+        <div style={{ display:'flex', gap:10, paddingTop:4 }}>
+          <button type="submit" disabled={saving} className="btn-primary btn-lg" style={{ flex:1 }}>
             {saving ? 'Creando versión...' : '🔖 Crear nueva versión'}
           </button>
-          <button type="button" onClick={() => navigate(-1)} className="btn-secondary btn-lg" style={{ flex: 1 }}>
-            Cancelar
-          </button>
+          <button type="button" onClick={() => navigate(-1)} className="btn-secondary btn-lg" style={{ flex:1 }}>Cancelar</button>
         </div>
       </form>
     </div>
