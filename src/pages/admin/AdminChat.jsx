@@ -1,17 +1,8 @@
 /**
  * pages/admin/AdminChat.jsx
  * ─────────────────────────────────────────────────────────────────────────────
- * Panel de chat del administrador.
- *
- * Arquitectura:
- *  - Lista todas las conversaciones via GET /api/chat/admin/conversaciones
- *  - Al seleccionar un usuario, carga su historial via GET /api/chat/admin/mensajes/:userId
- *  - Escucha mensajes nuevos de todos los usuarios via Pusher (canal: admin-chat)
- *  - Al tener un usuario seleccionado, también actualiza el chat en tiempo real
- *  - Responde via POST /api/chat/admin/responder
- *
- * La lógica realtime está completamente delegada a usePusherChat y
- * usePusherAdminNotifications. Este componente solo maneja UI y HTTP.
+ * Panel de chat del administrador — estilo Messenger.
+ * La lógica HTTP y Pusher se mantiene exactamente igual que antes.
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react'
@@ -22,6 +13,89 @@ import usePusherAdminNotifications from '../../hooks/usePusherAdminNotifications
 import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 
+// ── Burbuja de mensaje ────────────────────────────────────────────────────────
+function MensajeBurbuja({ mensaje }) {
+  const esAdmin = mensaje.esAdmin
+  const hora = new Date(mensaje.createdAt).toLocaleTimeString('es-EC', {
+    hour: '2-digit', minute: '2-digit',
+  })
+  return (
+    <div style={{ display:'flex', flexDirection:'column', alignItems: esAdmin ? 'flex-end' : 'flex-start', marginBottom:2 }}>
+      <div style={{
+        maxWidth:'72%',
+        background: esAdmin ? '#0084ff' : '#f0f0f0',
+        color: esAdmin ? '#fff' : '#050505',
+        borderRadius: esAdmin ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+        padding:'9px 13px',
+        fontSize:14,
+        lineHeight:1.45,
+        wordBreak:'break-word',
+        boxShadow:'0 1px 2px rgba(0,0,0,0.07)',
+      }}>
+        {mensaje.texto}
+      </div>
+      <span style={{ fontSize:10, color:'#8a8d91', marginTop:2, paddingInline:3 }}>{hora}</span>
+    </div>
+  )
+}
+
+// ── Item de conversación ──────────────────────────────────────────────────────
+function ConversacionItem({ conv, activa, onClick }) {
+  const fecha = conv.ultimaFecha
+    ? new Date(conv.ultimaFecha).toLocaleDateString('es-EC', { day:'2-digit', month:'short' })
+    : ''
+  const iniciales = `${conv.nombre?.[0] || ''}${conv.apellido?.[0] || ''}`.toUpperCase()
+
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        padding:'10px 12px',
+        cursor:'pointer',
+        display:'flex', alignItems:'center', gap:10,
+        background: activa ? '#e7f3ff' : 'transparent',
+        borderRadius:10,
+        margin:'2px 6px',
+        transition:'background 0.15s',
+      }}
+      onMouseEnter={e => { if (!activa) e.currentTarget.style.background = '#f5f5f5' }}
+      onMouseLeave={e => { if (!activa) e.currentTarget.style.background = 'transparent' }}
+    >
+      {/* Avatar */}
+      <div style={{
+        width:44, height:44, borderRadius:'50%', flexShrink:0,
+        background: activa ? '#0084ff' : '#d8d8d8',
+        color: activa ? '#fff' : '#555',
+        display:'flex', alignItems:'center', justifyContent:'center',
+        fontSize:15, fontWeight:700, fontFamily:'Syne,sans-serif',
+        transition:'background 0.15s',
+      }}>
+        {iniciales || '👤'}
+      </div>
+
+      <div style={{ flex:1, minWidth:0 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:4 }}>
+          <p style={{ margin:0, fontSize:14, fontWeight: conv.sinLeer > 0 ? 700 : 600, color:'#050505', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:130 }}>
+            {conv.nombre} {conv.apellido}
+          </p>
+          <span style={{ fontSize:11, color:'#8a8d91', flexShrink:0 }}>{fecha}</span>
+        </div>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:4 }}>
+          <p style={{ margin:0, fontSize:12, color: conv.sinLeer > 0 ? '#050505' : '#8a8d91', fontWeight: conv.sinLeer > 0 ? 600 : 400, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:150 }}>
+            {conv.ultimoMensaje || 'Sin mensajes'}
+          </p>
+          {conv.sinLeer > 0 && (
+            <span style={{ background:'#0084ff', color:'#fff', borderRadius:10, padding:'1px 7px', fontSize:11, fontWeight:700, flexShrink:0 }}>
+              {conv.sinLeer}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Componente principal ──────────────────────────────────────────────────────
 export default function AdminChat() {
   const { user }                                    = useAuth()
   const [conversaciones, setConversaciones]         = useState([])
@@ -37,22 +111,19 @@ export default function AdminChat() {
   const { mensajes, setMensajes } = usePusherChat({
     userId:         user?._id,
     esAdmin:        true,
-    selectedUserId, // Solo agrega mensajes del usuario seleccionado al estado
+    selectedUserId,
   })
 
-  // ── Realtime: notificaciones globales (cualquier usuario) ─────────────────
+  // ── Realtime: notificaciones globales ─────────────────────────────────────
   const { notificaciones, limpiarNotificaciones } = usePusherAdminNotifications({
     activo: true,
     onNuevoMensaje: useCallback((data) => {
-      // Toast de notificación si el mensaje es de otro usuario (no el seleccionado)
       if (data.userId !== selectedUserId) {
         toast(`💬 Nuevo mensaje de ${data.userName}`, {
           duration: 4000,
-          style: { background: 'var(--surface)', color: 'var(--text-1)', border: '1px solid var(--border)' },
+          style: { background:'var(--surface)', color:'var(--text-1)', border:'1px solid var(--border)' },
         })
       }
-
-      // Actualizar el contador en la lista de conversaciones
       setConversaciones((prev) =>
         prev.map((conv) =>
           conv.userId === data.userId
@@ -72,21 +143,17 @@ export default function AdminChat() {
       .finally(() => setCargandoLista(false))
   }, [])
 
-  // ── Seleccionar usuario: cargar historial ─────────────────────────────────
+  // ── Seleccionar usuario ────────────────────────────────────────────────────
   const seleccionarUsuario = async (conv) => {
     if (conv.userId === selectedUserId) return
-
     setSelectedUserId(conv.userId)
     setSelectedUserInfo(conv)
     setMensajes([])
     setCargandoChat(true)
     limpiarNotificaciones()
-
-    // Limpiar badge de sinLeer del usuario seleccionado
     setConversaciones((prev) =>
       prev.map((c) => c.userId === conv.userId ? { ...c, sinLeer: 0 } : c)
     )
-
     try {
       const { data } = await api.get(`/chat/admin/mensajes/${conv.userId}`)
       setMensajes(data?.data?.mensajes || [])
@@ -102,28 +169,20 @@ export default function AdminChat() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [mensajes])
 
-  // ── Enviar respuesta (HTTP) ────────────────────────────────────────────────
+  // ── Enviar respuesta ───────────────────────────────────────────────────────
   const handleResponder = async () => {
     const texto = inputTexto.trim()
     if (!texto || enviando || !selectedUserId) return
-
     setEnviando(true)
     try {
-      const { data } = await api.post('/chat/admin/responder', {
-        userId: selectedUserId,
-        texto,
-      })
-      // Agregar la respuesta al estado local del chat activo
-      setMensajes((prev) => [
-        ...prev,
-        {
-          _id:       data.data._id,
-          texto:     data.data.texto,
-          esAdmin:   true,
-          leido:     false,
-          createdAt: data.data.fecha || new Date().toISOString(),
-        },
-      ])
+      const { data } = await api.post('/chat/admin/responder', { userId: selectedUserId, texto })
+      setMensajes((prev) => [...prev, {
+        _id:       data.data._id,
+        texto:     data.data.texto,
+        esAdmin:   true,
+        leido:     false,
+        createdAt: data.data.fecha || new Date().toISOString(),
+      }])
       setInputTexto('')
     } catch {
       toast.error('Error al enviar la respuesta')
@@ -133,48 +192,74 @@ export default function AdminChat() {
   }
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleResponder()
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleResponder() }
   }
 
+  const totalNoLeidos = conversaciones.reduce((acc, c) => acc + (c.sinLeer || 0), 0)
+
   // ── Render ─────────────────────────────────────────────────────────────────
-
   return (
-    <div className="page" style={{ animation: 'slideUp 0.4s ease-out' }}>
+    <div className="page" style={{ animation:'slideUp 0.4s ease-out', padding:0 }}>
+      <style>{`
+        .admin-msg-input::placeholder { color:#bcc0c4 }
+        .admin-msg-input:focus { outline:none }
+        .admin-send-btn:hover:not(:disabled) { background:#006ddb !important }
+        .admin-send-btn:disabled { opacity:0.4; cursor:default }
+        .conv-scroll::-webkit-scrollbar { width:4px }
+        .conv-scroll::-webkit-scrollbar-track { background:transparent }
+        .conv-scroll::-webkit-scrollbar-thumb { background:#d0d0d0; border-radius:4px }
+        .msgs-scroll::-webkit-scrollbar { width:5px }
+        .msgs-scroll::-webkit-scrollbar-track { background:transparent }
+        .msgs-scroll::-webkit-scrollbar-thumb { background:#e0e0e0; border-radius:4px }
+      `}</style>
 
-      {/* Header */}
-      <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+      {/* ── Cabecera ── */}
+      <div style={{ padding:'20px 24px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:8, flexWrap:'wrap' }}>
         <div>
-          <h1 style={{ fontFamily: 'Syne, sans-serif', fontSize: 24, fontWeight: 800, color: 'var(--text-1)', margin: '0 0 2px', letterSpacing: '-0.03em' }}>
+          <h1 style={{ fontFamily:'Syne,sans-serif', fontSize:22, fontWeight:800, color:'var(--text-1)', margin:'0 0 2px', letterSpacing:'-0.03em' }}>
             💬 Chat — Panel Admin
           </h1>
-          <p style={{ fontSize: 13, color: 'var(--text-3)', margin: 0 }}>
-            Conversaciones en tiempo real con usuarios
-          </p>
+          <p style={{ fontSize:13, color:'var(--text-3)', margin:0 }}>Conversaciones en tiempo real con usuarios</p>
         </div>
-        {notificaciones.length > 0 && (
-          <div style={{ background: '#ef4444', color: '#fff', borderRadius: 20, padding: '4px 12px', fontSize: 13, fontWeight: 700 }}>
-            {notificaciones.length} nuevo{notificaciones.length > 1 ? 's' : ''}
+        {totalNoLeidos > 0 && (
+          <div style={{ background:'#0084ff', color:'#fff', borderRadius:20, padding:'4px 14px', fontSize:13, fontWeight:700 }}>
+            {totalNoLeidos} sin leer
           </div>
         )}
       </div>
 
-      {/* Layout: lista + chat */}
-      <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 16, height: 'calc(100vh - 220px)', minHeight: 400 }}>
+      {/* ── Layout Messenger ── */}
+      <div style={{
+        display:'grid', gridTemplateColumns:'300px 1fr',
+        height:'calc(100vh - 190px)', minHeight:440,
+        margin:'0 0 0 0',
+        background:'#fff',
+        border:'1px solid #e4e6ea',
+        borderRadius:16,
+        overflow:'hidden',
+        boxShadow:'0 2px 12px rgba(0,0,0,0.07)',
+      }}>
 
-        {/* ── Lista de conversaciones ── */}
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)', fontFamily: 'Syne, sans-serif', fontSize: 13, fontWeight: 700, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            Conversaciones
+        {/* ── Sidebar: lista de conversaciones ── */}
+        <div style={{ borderRight:'1px solid #e4e6ea', display:'flex', flexDirection:'column', background:'#fff' }}>
+
+          {/* Buscador decorativo */}
+          <div style={{ padding:'12px 12px 8px' }}>
+            <div style={{ background:'#f0f2f5', borderRadius:20, padding:'7px 14px', fontSize:14, color:'#8a8d91', display:'flex', alignItems:'center', gap:6 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="#8a8d91" strokeWidth="2"/><path d="M21 21l-4.35-4.35" stroke="#8a8d91" strokeWidth="2" strokeLinecap="round"/></svg>
+              Buscar en Mensajes
+            </div>
           </div>
 
-          <div style={{ flex: 1, overflowY: 'auto' }}>
+          <p style={{ fontSize:11, fontWeight:700, color:'#8a8d91', textTransform:'uppercase', letterSpacing:'0.06em', padding:'4px 18px 6px', margin:0 }}>
+            Conversaciones
+          </p>
+
+          <div className="conv-scroll" style={{ flex:1, overflowY:'auto', paddingBottom:8 }}>
             {cargandoLista ? (
-              <div style={{ padding: 24, textAlign: 'center' }}><Spinner /></div>
+              <div style={{ padding:24, textAlign:'center' }}><Spinner /></div>
             ) : conversaciones.length === 0 ? (
-              <p style={{ padding: 24, fontSize: 13, color: 'var(--text-3)', textAlign: 'center' }}>Sin conversaciones aún</p>
+              <p style={{ padding:24, fontSize:13, color:'#8a8d91', textAlign:'center' }}>Sin conversaciones aún</p>
             ) : (
               conversaciones.map((conv) => (
                 <ConversacionItem
@@ -189,31 +274,56 @@ export default function AdminChat() {
         </div>
 
         {/* ── Panel de chat ── */}
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ display:'flex', flexDirection:'column', background:'#fff' }}>
 
-          {/* Chat header */}
-          {selectedUserInfo && (
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(99,102,241,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>👤</div>
+          {/* Header del chat activo */}
+          {selectedUserInfo ? (
+            <div style={{
+              padding:'10px 16px',
+              borderBottom:'1px solid #e4e6ea',
+              display:'flex', alignItems:'center', gap:10,
+              background:'#fff',
+            }}>
+              <div style={{
+                width:38, height:38, borderRadius:'50%',
+                background:'#0084ff',
+                color:'#fff',
+                display:'flex', alignItems:'center', justifyContent:'center',
+                fontSize:14, fontWeight:700, fontFamily:'Syne,sans-serif', flexShrink:0,
+              }}>
+                {`${selectedUserInfo.nombre?.[0] || ''}${selectedUserInfo.apellido?.[0] || ''}`.toUpperCase() || '👤'}
+              </div>
               <div>
-                <p style={{ fontFamily: 'Syne, sans-serif', fontSize: 14, fontWeight: 700, color: 'var(--text-1)', margin: 0 }}>
+                <p style={{ margin:0, fontSize:14, fontWeight:700, color:'#050505', fontFamily:'Syne,sans-serif' }}>
                   {selectedUserInfo.nombre} {selectedUserInfo.apellido}
                 </p>
-                <p style={{ fontSize: 12, color: 'var(--text-3)', margin: 0 }}>{selectedUserInfo.email}</p>
+                <p style={{ margin:0, fontSize:12, color:'#8a8d91' }}>{selectedUserInfo.email}</p>
               </div>
+            </div>
+          ) : (
+            <div style={{ padding:'10px 16px', borderBottom:'1px solid #e4e6ea', height:59, display:'flex', alignItems:'center' }}>
+              <p style={{ margin:0, fontSize:14, color:'#8a8d91' }}>Selecciona una conversación</p>
             </div>
           )}
 
-          {/* Mensajes */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {/* Área de mensajes */}
+          <div className="msgs-scroll" style={{
+            flex:1, overflowY:'auto',
+            padding:'16px 16px 8px',
+            display:'flex', flexDirection:'column', gap:6,
+            background:'#fff',
+          }}>
             {!selectedUserId && (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, color: 'var(--text-3)' }}>
-                <span style={{ fontSize: 40 }}>👈</span>
-                <p style={{ fontSize: 14, margin: 0 }}>Selecciona una conversación</p>
+              <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:10, color:'#8a8d91', paddingTop:60 }}>
+                <svg width="56" height="56" viewBox="0 0 24 24" fill="#d0d0d0"><path d="M12 2C6.477 2 2 6.145 2 11.243c0 2.921 1.406 5.53 3.608 7.28V22l3.37-1.853A10.8 10.8 0 0012 20.486c5.523 0 10-4.145 10-9.243S17.523 2 12 2z"/></svg>
+                <p style={{ fontSize:14, margin:0, fontWeight:600 }}>Elige una conversación</p>
+                <p style={{ fontSize:12, margin:0 }}>Selecciona un usuario de la lista para ver sus mensajes</p>
               </div>
             )}
 
-            {cargandoChat && <Spinner />}
+            {cargandoChat && (
+              <div style={{ display:'flex', justifyContent:'center', paddingTop:40 }}><Spinner /></div>
+            )}
 
             {!cargandoChat && mensajes.map((msg) => (
               <MensajeBurbuja key={msg._id} mensaje={msg} />
@@ -224,103 +334,57 @@ export default function AdminChat() {
 
           {/* Input respuesta */}
           {selectedUserId && (
-            <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border)', display: 'flex', gap: 8 }}>
+            <div style={{
+              padding:'8px 12px',
+              borderTop:'1px solid #e4e6ea',
+              display:'flex', alignItems:'flex-end', gap:8,
+              background:'#fff',
+              flexShrink:0,
+            }}>
               <textarea
+                className="admin-msg-input"
                 value={inputTexto}
                 onChange={(e) => setInputTexto(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Escribe tu respuesta… (Enter para enviar)"
-                rows={2}
+                placeholder="Aa"
+                rows={1}
                 maxLength={2000}
                 style={{
-                  flex: 1, resize: 'none', borderRadius: 10,
-                  border: '1px solid var(--border)', background: 'var(--bg)',
-                  color: 'var(--text-1)', padding: '8px 12px',
-                  fontSize: 14, fontFamily: 'inherit', outline: 'none',
+                  flex:1, resize:'none',
+                  border:'none',
+                  background:'#f0f2f5',
+                  borderRadius:20,
+                  padding:'9px 16px',
+                  fontSize:14,
+                  fontFamily:'inherit',
+                  lineHeight:1.45,
+                  maxHeight:90,
+                  overflowY:'auto',
+                  color:'#050505',
+                }}
+                onInput={e => {
+                  e.target.style.height = 'auto'
+                  e.target.style.height = Math.min(e.target.scrollHeight, 90) + 'px'
                 }}
               />
               <button
+                className="admin-send-btn"
                 onClick={handleResponder}
                 disabled={!inputTexto.trim() || enviando}
-                className="btn-primary"
-                style={{ alignSelf: 'flex-end', padding: '8px 18px', borderRadius: 10, whiteSpace: 'nowrap', fontSize: 14 }}
+                style={{
+                  width:36, height:36, borderRadius:'50%',
+                  background:'#0084ff', border:'none', cursor:'pointer',
+                  color:'#fff', fontSize:16,
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  flexShrink:0, transition:'background 0.15s',
+                }}
               >
-                {enviando ? '…' : 'Responder'}
+                {enviando ? '…' : '➤'}
               </button>
             </div>
           )}
         </div>
       </div>
-    </div>
-  )
-}
-
-// ── Sub-componentes ───────────────────────────────────────────────────────────
-
-function ConversacionItem({ conv, activa, onClick }) {
-  const fecha = conv.ultimaFecha
-    ? new Date(conv.ultimaFecha).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' })
-    : ''
-
-  return (
-    <div
-      onClick={onClick}
-      style={{
-        padding: '12px 16px',
-        cursor: 'pointer',
-        borderBottom: '1px solid var(--border)',
-        background: activa ? 'rgba(99,102,241,0.08)' : 'transparent',
-        borderLeft: activa ? '3px solid var(--primary)' : '3px solid transparent',
-        transition: 'all 0.15s',
-      }}
-      onMouseEnter={e => { if (!activa) e.currentTarget.style.background = 'var(--bg)' }}
-      onMouseLeave={e => { if (!activa) e.currentTarget.style.background = 'transparent' }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 6 }}>
-        <p style={{ fontFamily: 'Syne, sans-serif', fontSize: 13, fontWeight: 700, color: 'var(--text-1)', margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 160 }}>
-          {conv.nombre} {conv.apellido}
-        </p>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3, flexShrink: 0 }}>
-          <span style={{ fontSize: 11, color: 'var(--text-3)' }}>{fecha}</span>
-          {conv.sinLeer > 0 && (
-            <span style={{ background: '#ef4444', color: '#fff', borderRadius: 10, padding: '1px 7px', fontSize: 11, fontWeight: 700 }}>
-              {conv.sinLeer}
-            </span>
-          )}
-        </div>
-      </div>
-      <p style={{ fontSize: 12, color: 'var(--text-3)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        {conv.ultimoMensaje}
-      </p>
-    </div>
-  )
-}
-
-function MensajeBurbuja({ mensaje }) {
-  const esAdmin = mensaje.esAdmin
-  const hora = new Date(mensaje.createdAt).toLocaleTimeString('es-EC', {
-    hour: '2-digit', minute: '2-digit',
-  })
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: esAdmin ? 'flex-end' : 'flex-start' }}>
-      <span style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 3, paddingInline: 4 }}>
-        {esAdmin ? '🔵 Tú (Admin)' : '🟣 Usuario'}
-      </span>
-      <div style={{
-        maxWidth: '70%',
-        background: esAdmin ? 'var(--primary)' : 'var(--bg)',
-        color: esAdmin ? '#fff' : 'var(--text-1)',
-        border: esAdmin ? 'none' : '1px solid var(--border)',
-        borderRadius: esAdmin ? '16px 4px 16px 16px' : '4px 16px 16px 16px',
-        padding: '9px 13px',
-        fontSize: 14,
-        lineHeight: 1.5,
-        wordBreak: 'break-word',
-      }}>
-        {mensaje.texto}
-      </div>
-      <span style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 3, paddingInline: 4 }}>{hora}</span>
     </div>
   )
 }
