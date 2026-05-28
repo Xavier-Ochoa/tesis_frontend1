@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
@@ -25,8 +25,11 @@ import AdminUsers     from './pages/admin/AdminUsers'
 import AdminChat      from './pages/admin/AdminChat'
 
 import Chat from './pages/user/Chat'
+import { useAuth } from './context/AuthContext'
 
 export default function App() {
+  const { user } = useAuth()
+  const esAdmin = user?.rol === 'admin'
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
       <Navbar />
@@ -50,7 +53,7 @@ export default function App() {
           <Route path="/mis-proyectos/editar/:id"         element={<ProtectedRoute><EditProject /></ProtectedRoute>} />
           <Route path="/mis-proyectos/:id/nueva-version" element={<ProtectedRoute><CreateVersion /></ProtectedRoute>} />
           <Route path="/perfil"                   element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/chat"                     element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+          <Route path="/chat"                     element={<ProtectedRoute><Navigate to="/dashboard" replace /></ProtectedRoute>} />
 
           {/* Admin */}
           <Route path="/admin"           element={<AdminRoute><AdminDashboard /></AdminRoute>} />
@@ -71,6 +74,8 @@ export default function App() {
       <footer style={{ borderTop:'1px solid var(--border)', padding:'1rem 1.5rem', textAlign:'center', fontSize:12, color:'var(--text-3)', background:'var(--surface)' }}>
         POLIESFOT — Escuela Politécnica Nacional © {new Date().getFullYear()}
       </footer>
+      {/* Widget de chat flotante — solo para usuarios autenticados no-admin */}
+      {user && !esAdmin && <Chat />}
     </div>
   )
 }
