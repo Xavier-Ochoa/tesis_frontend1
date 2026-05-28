@@ -1,7 +1,12 @@
 /**
  * pages/admin/AdminChat.jsx
  * ─────────────────────────────────────────────────────────────────────────────
- * Panel de chat del administrador — estilo Messenger, tema coherente con la app.
+ * Widget flotante de chat para el administrador — mismo estilo que Chat.jsx
+ * (estudiante/docente). Aparece como botón fijo en la esquina inferior derecha
+ * de cualquier página del admin. Al abrir muestra un popup con:
+ *   · columna izquierda → lista de conversaciones
+ *   · columna derecha   → hilo de mensajes del usuario seleccionado
+ *
  * La lógica HTTP y Pusher se mantiene exactamente igual que antes.
  */
 
@@ -22,20 +27,19 @@ function MensajeBurbuja({ mensaje }) {
   return (
     <div style={{ display:'flex', flexDirection:'column', alignItems: esAdmin ? 'flex-end' : 'flex-start', marginBottom:2 }}>
       <div style={{
-        maxWidth:'72%',
-        background: esAdmin ? 'var(--primary)' : 'var(--surface2)',
-        color: esAdmin ? '#fff' : 'var(--text-1)',
-        border: esAdmin ? 'none' : '1px solid var(--border)',
+        maxWidth:'78%',
+        background: esAdmin ? '#0084ff' : '#f0f2f5',
+        color: esAdmin ? '#fff' : '#050505',
         borderRadius: esAdmin ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
         padding:'9px 13px',
         fontSize:14,
         lineHeight:1.45,
         wordBreak:'break-word',
-        boxShadow:'0 1px 2px rgba(0,0,0,0.07)',
+        boxShadow:'0 1px 2px rgba(0,0,0,0.08)',
       }}>
         {mensaje.texto}
       </div>
-      <span style={{ fontSize:10, color:'var(--text-3)', marginTop:2, paddingInline:3 }}>{hora}</span>
+      <span style={{ fontSize:10, color:'#8a8d91', marginTop:2, paddingInline:3 }}>{hora}</span>
     </div>
   )
 }
@@ -51,43 +55,41 @@ function ConversacionItem({ conv, activa, onClick }) {
     <div
       onClick={onClick}
       style={{
-        padding:'10px 12px',
+        padding:'8px 10px',
         cursor:'pointer',
-        display:'flex', alignItems:'center', gap:10,
-        background: activa ? 'var(--primary-l)' : 'transparent',
-        borderRadius:10,
-        margin:'2px 6px',
-        borderLeft: activa ? '3px solid var(--primary)' : '3px solid transparent',
+        display:'flex', alignItems:'center', gap:8,
+        background: activa ? '#e7f3ff' : 'transparent',
+        borderRadius:8,
+        margin:'1px 4px',
+        borderLeft: activa ? '3px solid #0084ff' : '3px solid transparent',
         transition:'background 0.15s',
       }}
-      onMouseEnter={e => { if (!activa) e.currentTarget.style.background = 'var(--surface2)' }}
+      onMouseEnter={e => { if (!activa) e.currentTarget.style.background = '#f0f2f5' }}
       onMouseLeave={e => { if (!activa) e.currentTarget.style.background = 'transparent' }}
     >
-      {/* Avatar */}
       <div style={{
-        width:44, height:44, borderRadius:'50%', flexShrink:0,
-        background: activa ? 'var(--primary)' : 'var(--border2)',
-        color: activa ? '#fff' : 'var(--text-2)',
+        width:36, height:36, borderRadius:'50%', flexShrink:0,
+        background: activa ? '#0084ff' : '#ccd0d5',
+        color: activa ? '#fff' : '#444',
         display:'flex', alignItems:'center', justifyContent:'center',
-        fontSize:15, fontWeight:700, fontFamily:'Syne,sans-serif',
-        transition:'background 0.15s',
+        fontSize:13, fontWeight:700,
       }}>
         {iniciales || '👤'}
       </div>
 
       <div style={{ flex:1, minWidth:0 }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:4 }}>
-          <p style={{ margin:0, fontSize:14, fontWeight: conv.sinLeer > 0 ? 700 : 600, color:'var(--text-1)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:130 }}>
+          <p style={{ margin:0, fontSize:13, fontWeight: conv.sinLeer > 0 ? 700 : 600, color:'#050505', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:100 }}>
             {conv.nombre} {conv.apellido}
           </p>
-          <span style={{ fontSize:11, color:'var(--text-3)', flexShrink:0 }}>{fecha}</span>
+          <span style={{ fontSize:10, color:'#8a8d91', flexShrink:0 }}>{fecha}</span>
         </div>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:4 }}>
-          <p style={{ margin:0, fontSize:12, color: conv.sinLeer > 0 ? 'var(--text-1)' : 'var(--text-3)', fontWeight: conv.sinLeer > 0 ? 600 : 400, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:150 }}>
+          <p style={{ margin:0, fontSize:11, color: conv.sinLeer > 0 ? '#050505' : '#8a8d91', fontWeight: conv.sinLeer > 0 ? 600 : 400, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:110 }}>
             {conv.ultimoMensaje || 'Sin mensajes'}
           </p>
           {conv.sinLeer > 0 && (
-            <span style={{ background:'var(--primary)', color:'#fff', borderRadius:10, padding:'1px 7px', fontSize:11, fontWeight:700, flexShrink:0 }}>
+            <span style={{ background:'#0084ff', color:'#fff', borderRadius:10, padding:'1px 6px', fontSize:10, fontWeight:700, flexShrink:0 }}>
               {conv.sinLeer}
             </span>
           )}
@@ -97,9 +99,11 @@ function ConversacionItem({ conv, activa, onClick }) {
   )
 }
 
-// ── Componente principal ──────────────────────────────────────────────────────
+// ── Componente principal (widget flotante) ────────────────────────────────────
 export default function AdminChat() {
   const { user }                                    = useAuth()
+  const [abierto, setAbierto]                       = useState(false)
+  const [vistaMovil, setVistaMovil]                 = useState('lista') // 'lista' | 'chat'
   const [conversaciones, setConversaciones]         = useState([])
   const [selectedUserId, setSelectedUserId]         = useState(null)
   const [selectedUserInfo, setSelectedUserInfo]     = useState(null)
@@ -109,21 +113,21 @@ export default function AdminChat() {
   const [cargandoChat, setCargandoChat]             = useState(false)
   const bottomRef = useRef(null)
 
-  // ── Realtime: mensajes del chat seleccionado ──────────────────────────────
+  // ── Realtime: mensajes del chat seleccionado ────────────────────────────
   const { mensajes, setMensajes } = usePusherChat({
     userId:         user?._id,
     esAdmin:        true,
     selectedUserId,
   })
 
-  // ── Realtime: notificaciones globales ─────────────────────────────────────
-  const { notificaciones, limpiarNotificaciones } = usePusherAdminNotifications({
+  // ── Realtime: notificaciones globales ───────────────────────────────────
+  const { limpiarNotificaciones } = usePusherAdminNotifications({
     activo: true,
     onNuevoMensaje: useCallback((data) => {
       if (data.userId !== selectedUserId) {
         toast(`💬 Nuevo mensaje de ${data.userName}`, {
           duration: 4000,
-          style: { background:'var(--surface)', color:'var(--text-1)', border:'1px solid var(--border)' },
+          style: { background:'#fff', color:'#050505', border:'1px solid #e4e6ea' },
         })
       }
       setConversaciones((prev) =>
@@ -136,22 +140,24 @@ export default function AdminChat() {
     }, [selectedUserId])
   })
 
-  // ── Cargar lista de conversaciones ────────────────────────────────────────
+  // ── Cargar lista de conversaciones al abrir ────────────────────────────
   useEffect(() => {
+    if (!abierto) return
     setCargandoLista(true)
     api.get('/chat/admin/conversaciones')
       .then(({ data }) => setConversaciones(data?.data || []))
       .catch(() => toast.error('Error al cargar conversaciones'))
       .finally(() => setCargandoLista(false))
-  }, [])
+  }, [abierto])
 
-  // ── Seleccionar usuario ────────────────────────────────────────────────────
+  // ── Seleccionar usuario ────────────────────────────────────────────────
   const seleccionarUsuario = async (conv) => {
-    if (conv.userId === selectedUserId) return
+    if (conv.userId === selectedUserId) { setVistaMovil('chat'); return }
     setSelectedUserId(conv.userId)
     setSelectedUserInfo(conv)
     setMensajes([])
     setCargandoChat(true)
+    setVistaMovil('chat')
     limpiarNotificaciones()
     setConversaciones((prev) =>
       prev.map((c) => c.userId === conv.userId ? { ...c, sinLeer: 0 } : c)
@@ -166,12 +172,12 @@ export default function AdminChat() {
     }
   }
 
-  // ── Auto-scroll ────────────────────────────────────────────────────────────
+  // ── Auto-scroll ────────────────────────────────────────────────────────
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [mensajes])
 
-  // ── Enviar respuesta ───────────────────────────────────────────────────────
+  // ── Enviar respuesta ───────────────────────────────────────────────────
   const handleResponder = async () => {
     const texto = inputTexto.trim()
     if (!texto || enviando || !selectedUserId) return
@@ -199,192 +205,270 @@ export default function AdminChat() {
 
   const totalNoLeidos = conversaciones.reduce((acc, c) => acc + (c.sinLeer || 0), 0)
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  // ── Render ─────────────────────────────────────────────────────────────
   return (
-    <div className="page" style={{ animation:'slideUp 0.4s ease-out' }}>
+    <>
       <style>{`
-        .admin-msg-input::placeholder { color:var(--text-3) }
-        .admin-msg-input:focus { outline:none }
-        .admin-send-btn:hover:not(:disabled) { opacity:0.85 }
-        .admin-send-btn:disabled { opacity:0.4; cursor:default }
-        .conv-scroll::-webkit-scrollbar { width:4px }
-        .conv-scroll::-webkit-scrollbar-track { background:transparent }
-        .conv-scroll::-webkit-scrollbar-thumb { background:var(--border2); border-radius:4px }
-        .msgs-scroll::-webkit-scrollbar { width:5px }
-        .msgs-scroll::-webkit-scrollbar-track { background:transparent }
-        .msgs-scroll::-webkit-scrollbar-thumb { background:var(--border2); border-radius:4px }
+        @keyframes adminChatSlideUp {
+          from { opacity:0; transform:translateY(20px) scale(0.97) }
+          to   { opacity:1; transform:translateY(0) scale(1) }
+        }
+        @keyframes adminChatPulse {
+          0%,100% { transform:scale(1) }
+          50%      { transform:scale(1.12) }
+        }
+        .adm-msg-input::placeholder { color:#bcc0c4 }
+        .adm-msg-input:focus { outline:none }
+        .adm-send-btn:hover:not(:disabled) { background:#006ddb !important }
+        .adm-send-btn:disabled { opacity:0.45; cursor:default }
+        .adm-conv-scroll::-webkit-scrollbar { width:3px }
+        .adm-conv-scroll::-webkit-scrollbar-thumb { background:#ccd0d5; border-radius:3px }
+        .adm-msgs-scroll::-webkit-scrollbar { width:4px }
+        .adm-msgs-scroll::-webkit-scrollbar-thumb { background:#ccd0d5; border-radius:4px }
       `}</style>
 
-      {/* ── Cabecera ── */}
-      <div style={{ marginBottom:'1.25rem', display:'flex', alignItems:'center', justifyContent:'space-between', gap:8, flexWrap:'wrap' }}>
-        <div>
-          <h1 style={{ fontFamily:'Syne,sans-serif', fontSize:24, fontWeight:800, color:'var(--text-1)', margin:'0 0 2px', letterSpacing:'-0.03em' }}>
-            💬 Chat — Panel Admin
-          </h1>
-          <p style={{ fontSize:13, color:'var(--text-3)', margin:0 }}>Conversaciones en tiempo real con usuarios</p>
-        </div>
-        {totalNoLeidos > 0 && (
-          <div style={{ background:'var(--primary)', color:'#fff', borderRadius:20, padding:'4px 14px', fontSize:13, fontWeight:700 }}>
-            {totalNoLeidos} sin leer
-          </div>
-        )}
-      </div>
+      {/* ── Ventana flotante ── */}
+      {abierto && (
+        <div style={{
+          position:'fixed', bottom:84, right:20, zIndex:9999,
+          width:660, maxWidth:'calc(100vw - 40px)',
+          height:500, maxHeight:'calc(100vh - 120px)',
+          background:'#fff',
+          borderRadius:16,
+          boxShadow:'0 8px 32px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.12)',
+          display:'flex', flexDirection:'column',
+          overflow:'hidden',
+          animation:'adminChatSlideUp 0.22s ease-out',
+        }}>
 
-      {/* ── Layout Messenger ── */}
-      <div style={{
-        display:'grid', gridTemplateColumns:'300px 1fr',
-        height:'calc(100vh - 210px)', minHeight:440,
-        background:'var(--surface)',
-        border:'1px solid var(--border)',
-        borderRadius:16,
-        overflow:'hidden',
-        boxShadow:'var(--shadow-lg)',
-      }}>
-
-        {/* ── Sidebar: lista de conversaciones ── */}
-        <div style={{ borderRight:'1px solid var(--border)', display:'flex', flexDirection:'column', background:'var(--surface)' }}>
-
-          {/* Buscador decorativo */}
-          <div style={{ padding:'12px 12px 8px' }}>
-            <div style={{ background:'var(--surface2)', border:'1px solid var(--border)', borderRadius:20, padding:'7px 14px', fontSize:13, color:'var(--text-3)', display:'flex', alignItems:'center', gap:6 }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="var(--text-3)" strokeWidth="2"/><path d="M21 21l-4.35-4.35" stroke="var(--text-3)" strokeWidth="2" strokeLinecap="round"/></svg>
-              Buscar conversación
-            </div>
-          </div>
-
-          <p style={{ fontSize:11, fontWeight:700, color:'var(--text-3)', textTransform:'uppercase', letterSpacing:'0.06em', padding:'4px 18px 6px', margin:0 }}>
-            Conversaciones
-          </p>
-
-          <div className="conv-scroll" style={{ flex:1, overflowY:'auto', paddingBottom:8 }}>
-            {cargandoLista ? (
-              <div style={{ padding:24, textAlign:'center' }}><Spinner /></div>
-            ) : conversaciones.length === 0 ? (
-              <p style={{ padding:24, fontSize:13, color:'var(--text-3)', textAlign:'center' }}>Sin conversaciones aún</p>
-            ) : (
-              conversaciones.map((conv) => (
-                <ConversacionItem
-                  key={conv.userId}
-                  conv={conv}
-                  activa={conv.userId === selectedUserId}
-                  onClick={() => seleccionarUsuario(conv)}
-                />
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* ── Panel de chat ── */}
-        <div style={{ display:'flex', flexDirection:'column', background:'var(--bg)' }}>
-
-          {/* Header del chat activo */}
-          {selectedUserInfo ? (
-            <div style={{
-              padding:'10px 16px',
-              borderBottom:'1px solid var(--border)',
-              display:'flex', alignItems:'center', gap:10,
-              background:'var(--surface)',
-            }}>
-              <div style={{
-                width:38, height:38, borderRadius:'50%',
-                background:'var(--primary)',
-                color:'#fff',
-                display:'flex', alignItems:'center', justifyContent:'center',
-                fontSize:14, fontWeight:700, fontFamily:'Syne,sans-serif', flexShrink:0,
-              }}>
-                {`${selectedUserInfo.nombre?.[0] || ''}${selectedUserInfo.apellido?.[0] || ''}`.toUpperCase() || '👤'}
-              </div>
-              <div>
-                <p style={{ margin:0, fontSize:14, fontWeight:700, color:'var(--text-1)', fontFamily:'Syne,sans-serif' }}>
-                  {selectedUserInfo.nombre} {selectedUserInfo.apellido}
-                </p>
-                <p style={{ margin:0, fontSize:12, color:'var(--text-3)' }}>{selectedUserInfo.email}</p>
-              </div>
-            </div>
-          ) : (
-            <div style={{ padding:'10px 16px', borderBottom:'1px solid var(--border)', height:59, display:'flex', alignItems:'center', background:'var(--surface)' }}>
-              <p style={{ margin:0, fontSize:14, color:'var(--text-3)' }}>Selecciona una conversación</p>
-            </div>
-          )}
-
-          {/* Área de mensajes */}
-          <div className="msgs-scroll" style={{
-            flex:1, overflowY:'auto',
-            padding:'16px 16px 8px',
-            display:'flex', flexDirection:'column', gap:6,
+          {/* Header */}
+          <div style={{
+            background:'linear-gradient(135deg,#0084ff 0%,#0066cc 100%)',
+            padding:'11px 14px',
+            display:'flex', alignItems:'center', gap:10,
+            flexShrink:0,
           }}>
-            {!selectedUserId && (
-              <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:10, color:'var(--text-3)', paddingTop:60 }}>
-                <span style={{ fontSize:48 }}>💬</span>
-                <p style={{ fontSize:14, margin:0, fontWeight:600, color:'var(--text-2)' }}>Elige una conversación</p>
-                <p style={{ fontSize:12, margin:0, color:'var(--text-3)' }}>Selecciona un usuario de la lista para ver sus mensajes</p>
-              </div>
+            {/* Botón volver en móvil */}
+            {vistaMovil === 'chat' && selectedUserInfo && (
+              <button
+                onClick={() => setVistaMovil('lista')}
+                style={{
+                  background:'rgba(255,255,255,0.18)', border:'none', borderRadius:'50%',
+                  width:28, height:28, cursor:'pointer', color:'#fff', fontSize:15,
+                  display:'none', alignItems:'center', justifyContent:'center',
+                  flexShrink:0,
+                }}
+                className="adm-back-btn"
+              >←</button>
             )}
-
-            {cargandoChat && (
-              <div style={{ display:'flex', justifyContent:'center', paddingTop:40 }}><Spinner /></div>
-            )}
-
-            {!cargandoChat && mensajes.map((msg) => (
-              <MensajeBurbuja key={msg._id} mensaje={msg} />
-            ))}
-
-            <div ref={bottomRef} />
+            <div style={{
+              width:32, height:32, borderRadius:'50%',
+              background:'rgba(255,255,255,0.22)',
+              display:'flex', alignItems:'center', justifyContent:'center',
+              fontSize:16, flexShrink:0,
+            }}>🛡️</div>
+            <div style={{ flex:1, minWidth:0 }}>
+              <p style={{ margin:0, fontSize:14, fontWeight:700, color:'#fff', lineHeight:1.2 }}>
+                Chat — Panel Admin
+              </p>
+              <p style={{ margin:0, fontSize:11, color:'rgba(255,255,255,0.8)' }}>
+                {conversaciones.length} conversaciones
+                {totalNoLeidos > 0 && ` · ${totalNoLeidos} sin leer`}
+              </p>
+            </div>
+            <button onClick={() => setAbierto(false)} style={{
+              background:'rgba(255,255,255,0.15)', border:'none', borderRadius:'50%',
+              width:28, height:28, cursor:'pointer', color:'#fff', fontSize:16,
+              display:'flex', alignItems:'center', justifyContent:'center',
+              flexShrink:0, transition:'background 0.15s',
+            }}>×</button>
           </div>
 
-          {/* Input respuesta */}
-          {selectedUserId && (
+          {/* Cuerpo: dos columnas */}
+          <div style={{ flex:1, display:'flex', overflow:'hidden' }}>
+
+            {/* ── Columna izquierda: lista de conversaciones ── */}
             <div style={{
-              padding:'8px 12px',
-              borderTop:'1px solid var(--border)',
-              display:'flex', alignItems:'flex-end', gap:8,
-              background:'var(--surface)',
-              flexShrink:0,
+              width:220, flexShrink:0,
+              borderRight:'1px solid #e4e6ea',
+              display:'flex', flexDirection:'column',
+              background:'#fff',
+              overflowY:'hidden',
             }}>
-              <textarea
-                className="admin-msg-input"
-                value={inputTexto}
-                onChange={(e) => setInputTexto(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Escribe tu respuesta… (Enter para enviar)"
-                rows={1}
-                maxLength={2000}
-                style={{
-                  flex:1, resize:'none',
-                  border:'1px solid var(--border)',
-                  background:'var(--surface2)',
-                  borderRadius:20,
-                  padding:'9px 16px',
-                  fontSize:14,
-                  fontFamily:'inherit',
-                  lineHeight:1.45,
-                  maxHeight:90,
-                  overflowY:'auto',
-                  color:'var(--text-1)',
-                }}
-                onInput={e => {
-                  e.target.style.height = 'auto'
-                  e.target.style.height = Math.min(e.target.scrollHeight, 90) + 'px'
-                }}
-              />
-              <button
-                className="admin-send-btn"
-                onClick={handleResponder}
-                disabled={!inputTexto.trim() || enviando}
-                className="btn-primary"
-                style={{
-                  width:36, height:36, borderRadius:'50%',
-                  border:'none', cursor:'pointer',
-                  display:'flex', alignItems:'center', justifyContent:'center',
-                  flexShrink:0, fontSize:16, padding:0,
-                }}
-              >
-                {enviando ? '…' : '➤'}
-              </button>
+              <p style={{
+                fontSize:10, fontWeight:700, color:'#8a8d91',
+                textTransform:'uppercase', letterSpacing:'0.06em',
+                padding:'8px 14px 4px', margin:0, flexShrink:0,
+              }}>
+                Conversaciones
+              </p>
+              <div className="adm-conv-scroll" style={{ flex:1, overflowY:'auto', paddingBottom:6 }}>
+                {cargandoLista ? (
+                  <div style={{ padding:20, textAlign:'center' }}><Spinner /></div>
+                ) : conversaciones.length === 0 ? (
+                  <p style={{ padding:16, fontSize:12, color:'#8a8d91', textAlign:'center' }}>Sin conversaciones</p>
+                ) : (
+                  conversaciones.map((conv) => (
+                    <ConversacionItem
+                      key={conv.userId}
+                      conv={conv}
+                      activa={conv.userId === selectedUserId}
+                      onClick={() => seleccionarUsuario(conv)}
+                    />
+                  ))
+                )}
+              </div>
             </div>
-          )}
+
+            {/* ── Columna derecha: chat activo ── */}
+            <div style={{ flex:1, display:'flex', flexDirection:'column', background:'#f0f2f5', overflow:'hidden' }}>
+
+              {/* Sub-header del usuario seleccionado */}
+              {selectedUserInfo ? (
+                <div style={{
+                  padding:'8px 12px',
+                  borderBottom:'1px solid #e4e6ea',
+                  display:'flex', alignItems:'center', gap:8,
+                  background:'#fff', flexShrink:0,
+                }}>
+                  <div style={{
+                    width:30, height:30, borderRadius:'50%',
+                    background:'#0084ff', color:'#fff',
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    fontSize:12, fontWeight:700, flexShrink:0,
+                  }}>
+                    {`${selectedUserInfo.nombre?.[0] || ''}${selectedUserInfo.apellido?.[0] || ''}`.toUpperCase() || '👤'}
+                  </div>
+                  <div style={{ minWidth:0 }}>
+                    <p style={{ margin:0, fontSize:13, fontWeight:700, color:'#050505', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                      {selectedUserInfo.nombre} {selectedUserInfo.apellido}
+                    </p>
+                    <p style={{ margin:0, fontSize:11, color:'#8a8d91', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                      {selectedUserInfo.email}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ padding:'8px 12px', borderBottom:'1px solid #e4e6ea', background:'#fff', flexShrink:0, height:47, display:'flex', alignItems:'center' }}>
+                  <p style={{ margin:0, fontSize:13, color:'#8a8d91' }}>Selecciona una conversación</p>
+                </div>
+              )}
+
+              {/* Mensajes */}
+              <div className="adm-msgs-scroll" style={{
+                flex:1, overflowY:'auto',
+                padding:'12px 12px 6px',
+                display:'flex', flexDirection:'column', gap:5,
+              }}>
+                {!selectedUserId && (
+                  <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8, color:'#8a8d91', paddingTop:40 }}>
+                    <span style={{ fontSize:36 }}>💬</span>
+                    <p style={{ fontSize:13, margin:0, fontWeight:600, color:'#444', textAlign:'center' }}>Elige una conversación</p>
+                    <p style={{ fontSize:12, margin:0, color:'#8a8d91', textAlign:'center' }}>Selecciona un usuario de la lista</p>
+                  </div>
+                )}
+                {cargandoChat && (
+                  <div style={{ display:'flex', justifyContent:'center', paddingTop:30 }}><Spinner /></div>
+                )}
+                {!cargandoChat && mensajes.map((msg) => (
+                  <MensajeBurbuja key={msg._id} mensaje={msg} />
+                ))}
+                <div ref={bottomRef} />
+              </div>
+
+              {/* Input respuesta */}
+              {selectedUserId && (
+                <div style={{
+                  padding:'8px 10px',
+                  borderTop:'1px solid #e4e6ea',
+                  display:'flex', alignItems:'flex-end', gap:6,
+                  background:'#fff', flexShrink:0,
+                }}>
+                  <textarea
+                    className="adm-msg-input"
+                    value={inputTexto}
+                    onChange={(e) => setInputTexto(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Aa"
+                    rows={1}
+                    maxLength={2000}
+                    style={{
+                      flex:1, resize:'none',
+                      border:'none',
+                      background:'#f0f2f5',
+                      borderRadius:20,
+                      padding:'8px 14px',
+                      fontSize:14,
+                      fontFamily:'inherit',
+                      lineHeight:1.45,
+                      maxHeight:80,
+                      overflowY:'auto',
+                      color:'#050505',
+                    }}
+                    onInput={e => {
+                      e.target.style.height = 'auto'
+                      e.target.style.height = Math.min(e.target.scrollHeight, 80) + 'px'
+                    }}
+                  />
+                  <button
+                    className="adm-send-btn"
+                    onClick={handleResponder}
+                    disabled={!inputTexto.trim() || enviando}
+                    style={{
+                      width:34, height:34, borderRadius:'50%',
+                      background:'#0084ff', border:'none', cursor:'pointer',
+                      color:'#fff', fontSize:16,
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      flexShrink:0, transition:'background 0.15s',
+                    }}
+                  >
+                    {enviando ? '…' : '➤'}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      )}
+
+      {/* ── Botón flotante ── */}
+      <button
+        onClick={() => setAbierto(o => !o)}
+        title="Chat Admin"
+        style={{
+          position:'fixed', bottom:20, right:20, zIndex:9999,
+          width:56, height:56, borderRadius:'50%',
+          background:'linear-gradient(135deg,#0084ff 0%,#0055cc 100%)',
+          border:'none', cursor:'pointer',
+          boxShadow:'0 4px 16px rgba(0,132,255,0.45), 0 2px 6px rgba(0,0,0,0.15)',
+          display:'flex', alignItems:'center', justifyContent:'center',
+          fontSize:24,
+          transition:'transform 0.2s, box-shadow 0.2s',
+          animation: totalNoLeidos > 0 && !abierto ? 'adminChatPulse 1.5s infinite' : 'none',
+        }}
+        onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.08)'}
+        onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+      >
+        {abierto ? (
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18M6 6l12 12" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"/>
+          </svg>
+        ) : (
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff">
+            <path d="M12 2C6.477 2 2 6.145 2 11.243c0 2.921 1.406 5.53 3.608 7.28V22l3.37-1.853A10.8 10.8 0 0012 20.486c5.523 0 10-4.145 10-9.243S17.523 2 12 2z"/>
+          </svg>
+        )}
+        {totalNoLeidos > 0 && !abierto && (
+          <span style={{
+            position:'absolute', top:0, right:0,
+            width:18, height:18, borderRadius:'50%',
+            background:'#fa3e3e', color:'#fff',
+            fontSize:10, fontWeight:700,
+            display:'flex', alignItems:'center', justifyContent:'center',
+            border:'2px solid #fff',
+          }}>{totalNoLeidos > 9 ? '9+' : totalNoLeidos}</span>
+        )}
+      </button>
+    </>
   )
 }
