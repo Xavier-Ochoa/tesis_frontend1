@@ -399,6 +399,43 @@ export default function ProjectDetail() {
             ))}
           </div>
 
+          {/* Documento PDF */}
+          {(() => {
+            const doc = project.documentos?.[0]
+            if (!doc) return null
+            const puedeVerDoc = esPublico || esMiembro || user?.rol === 'admin'
+            if (!puedeVerDoc) return null
+            return (
+              <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:14, padding:'16px' }}>
+                <h3 style={{ fontFamily:'Syne, sans-serif', fontSize:13, fontWeight:700, color:'var(--text-2)', margin:'0 0 10px', textTransform:'uppercase', letterSpacing:'0.08em' }}>Documento</h3>
+                <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:10, background:'var(--surface2)', border:'1px solid var(--border)' }}>
+                  <span style={{ fontSize:22, flexShrink:0 }}>📄</span>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <p style={{ fontSize:12, fontWeight:600, color:'var(--text-1)', margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{doc.filename}</p>
+                    {doc.size && <p style={{ fontSize:11, color:'var(--text-3)', margin:0 }}>{(doc.size / 1024).toFixed(1)} KB</p>}
+                  </div>
+                </div>
+                <div style={{ display:'flex', gap:6, marginTop:8 }}>
+                  <a href={`${import.meta.env.VITE_API_URL || ''}/api/proyectos/${id}/documento`} target="_blank" rel="noreferrer"
+                    style={{ flex:1, textAlign:'center', fontSize:12, fontWeight:600, color:'var(--primary)', background:'var(--primary-l)', border:'1px solid var(--primary)', borderRadius:8, padding:'7px 10px', textDecoration:'none' }}>
+                    👁 Ver PDF
+                  </a>
+                  <a href={`${import.meta.env.VITE_API_URL || ''}/api/proyectos/${id}/documento`} download={doc.filename}
+                    style={{ flex:1, textAlign:'center', fontSize:12, fontWeight:600, color:'var(--text-2)', background:'var(--surface)', border:'1px solid var(--border)', borderRadius:8, padding:'7px 10px', textDecoration:'none' }}>
+                    ⬇ Descargar
+                  </a>
+                </div>
+                {isAuthor && (
+                  <div style={{ marginTop:8 }}>
+                    <Link to={`/mis-proyectos/editar/${id}`} style={{ display:'block', textAlign:'center', fontSize:11, color:'var(--text-3)', textDecoration:'none' }}>
+                      Reemplazar o eliminar en Editar →
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )
+          })()}
+
           {/* Tags */}
           {project.tags?.length > 0 && (
             <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:14, padding:'16px' }}>
