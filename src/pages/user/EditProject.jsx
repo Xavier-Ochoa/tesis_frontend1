@@ -43,6 +43,9 @@ export default function EditProject() {
   const [existingImages, setExisting]     = useState([])
   const [newImages, setNewImages]         = useState([])
   const [newPreviews, setNewPreviews]     = useState([])
+  const [docActual, setDocActual]         = useState(null)   // doc guardado en BD
+  const [nuevoDoc, setNuevoDoc]           = useState(null)   // nuevo archivo a subir
+  const [eliminandoDoc, setEliminandoDoc] = useState(false)
   const [loading, setLoading]             = useState(true)
   const [saving, setSaving]               = useState(false)
   const [deletingIdx, setDeletingIdx]     = useState(null)
@@ -54,6 +57,7 @@ export default function EditProject() {
         const p = r.data?.data || r.data
         setProject(p)
         setExisting(p.imagenes || [])
+        setDocActual(p.documentos?.[0] || null)
         setEnviarAlAdmin(p.enviarAlAdmin ?? false)
 
         const autorId = p.autor?._id || p.autor
@@ -124,11 +128,13 @@ export default function EditProject() {
         const camposColab = ['descripcion', 'tecnologias', 'repositorio', 'enlaceDemo', 'tags', 'lineaInvestigacion']
         camposColab.forEach(k => { if (form[k] !== '') fd.append(k, form[k]) })
         newImages.forEach(img => fd.append('imagenes', img))
+        if (nuevoDoc) fd.append('documento', nuevoDoc)
         await api.put(`/proyectos/${id}/colaborador`, fd)
       } else {
         Object.entries(form).forEach(([k, v]) => { if (v !== '') fd.append(k, v) })
         fd.append('enviarAlAdmin', enviarAlAdmin ? 'true' : 'false')
         newImages.forEach(img => fd.append('imagenes', img))
+        if (nuevoDoc) fd.append('documento', nuevoDoc)
         await api.put(`/proyectos/${id}`, fd)
       }
       toast.success('Proyecto actualizado')
@@ -220,6 +226,60 @@ export default function EditProject() {
             </div>
           )}
           <input id="imgs-edit" type="file" accept="image/*" multiple style={{ display:'none' }} onChange={handleNewImages} />
+        </div>
+
+        {/* ── Documento PDF ── */}
+        <div>
+          <label className="label" style={{ display:'flex', alignItems:'center' }}>
+            Documento PDF
+            <FieldHint text="Sube o reemplaza el documento principal del proyecto (máx. 10MB). Solo PDF." />
+          </label>
+          {docActual && !nuevoDoc && (
+            <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', borderRadius:12, background:'var(--surface2)', border:'1px solid var(--border)', marginBottom:8 }}>
+              <span style={{ fontSize:20 }}>📄</span>
+              <div style={{ flex:1, minWidth:0 }}>
+                <p style={{ fontSize:13, fontWeight:600, color:'var(--text-1)', margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{docActual.filename}</p>
+                <p style={{ fontSize:11, color:'var(--text-3)', margin:0 }}>{docActual.size ? `${(docActual.size / 1024).toFixed(1)} KB` : ''} · Subido {docActual.uploadDate ? new Date(docActual.uploadDate).toLocaleDateString('es-EC') : ''}</p>
+              </div>
+              <div style={{ display:'flex', gap:6 }}>
+                <a href={`${import.meta.env.VITE_API_URL || ''}/api/proyectos/${id}/documento`} target="_blank" rel="noreferrer"
+                  style={{ fontSize:12, fontWeight:600, color:'var(--primary)', background:'var(--primary-l)', border:'1px solid var(--primary)', borderRadius:7, padding:'4px 10px', textDecoration:'none' }}>
+                  Ver
+                </a>
+                <button type="button" disabled={eliminandoDoc} onClick={async () => {
+                  if (!confirm('¿Eliminar el documento PDF?')) return
+                  setEliminandoDoc(true)
+                  try { await api.delete(`/proyectos/${id}/documento`); setDocActual(null); toast.success('Documento eliminado') }
+                  catch (err) { toast.error(err.response?.data?.message || 'Error al eliminar el documento') }
+                  finally { setEliminandoDoc(false) }
+                }} style={{ fontSize:12, fontWeight:600, color:'var(--danger)', background:'var(--danger-l)', border:'1px solid var(--danger)', borderRadius:7, padding:'4px 10px', cursor:'pointer' }}>
+                  {eliminandoDoc ? '…' : 'Eliminar'}
+                </button>
+              </div>
+            </div>
+          )}
+          {nuevoDoc ? (
+            <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', borderRadius:12, background:'var(--surface2)', border:'1px solid var(--primary)' }}>
+              <span style={{ fontSize:20 }}>📄</span>
+              <div style={{ flex:1, minWidth:0 }}>
+                <p style={{ fontSize:13, fontWeight:600, color:'var(--text-1)', margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{nuevoDoc.name}</p>
+                <p style={{ fontSize:11, color:'var(--text-3)', margin:0 }}>{(nuevoDoc.size / 1024).toFixed(1)} KB · {docActual ? 'Reemplazará el actual' : 'Nuevo documento'}</p>
+              </div>
+              <button type="button" onClick={() => setNuevoDoc(null)} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--danger)', fontSize:18, padding:'0 4px', flexShrink:0 }}>×</button>
+            </div>
+          ) : (
+            <div onClick={() => document.getElementById('pdf-edit').click()}
+              style={{ border:'2px dashed var(--border2)', borderRadius:12, padding:'1rem', textAlign:'center', cursor:'pointer', background:'var(--surface2)', transition:'border-color 0.2s' }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary)'}
+              onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border2)'}>
+              <p style={{ fontSize:13, color:'var(--text-3)', margin:0 }}>{docActual ? '🔄 Reemplazar PDF' : '+ Adjuntar PDF'}</p>
+            </div>
+          )}
+          <input id="pdf-edit" type="file" accept="application/pdf" style={{ display:'none' }} onChange={e => {
+            const f = e.target.files?.[0]
+            if (f) { if (f.size > 10 * 1024 * 1024) { toast.error('El PDF no debe superar los 10MB.'); return } setNuevoDoc(f) }
+            e.target.value = ''
+          }} />
         </div>
 
         {/* Campos solo del AUTOR */}
