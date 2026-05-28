@@ -105,6 +105,29 @@ export default function ProjectDetail() {
   const [showHistorial, setShowHistorial] = useState(false)
   const [showPublicarModal, setShowPublicarModal] = useState(false)
   const [publicando, setPublicando]   = useState(false)
+  const [descargandoPdf, setDescargandoPdf] = useState(false)
+
+  const abrirPDF = async (descargar = false) => {
+    setDescargandoPdf(true)
+    try {
+      const resp = await api.get(`/proyectos/${id}/documento`, { responseType: 'blob' })
+      const blob = new Blob([resp.data], { type: 'application/pdf' })
+      const url  = URL.createObjectURL(blob)
+      if (descargar) {
+        const a = document.createElement('a')
+        a.href = url
+        a.download = project?.documentos?.[0]?.filename || 'documento.pdf'
+        a.click()
+      } else {
+        window.open(url, '_blank')
+      }
+      setTimeout(() => URL.revokeObjectURL(url), 60000)
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error al obtener el documento')
+    } finally {
+      setDescargandoPdf(false)
+    }
+  }
 
   const fetchProject = async () => {
     try {
@@ -416,14 +439,14 @@ export default function ProjectDetail() {
                   </div>
                 </div>
                 <div style={{ display:'flex', gap:6, marginTop:8 }}>
-                  <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/proyectos/${id}/documento`} target="_blank" rel="noreferrer"
-                    style={{ flex:1, textAlign:'center', fontSize:12, fontWeight:600, color:'var(--primary)', background:'var(--primary-l)', border:'1px solid var(--primary)', borderRadius:8, padding:'7px 10px', textDecoration:'none' }}>
-                    👁 Ver PDF
-                  </a>
-                  <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/proyectos/${id}/documento`} download={doc.filename}
-                    style={{ flex:1, textAlign:'center', fontSize:12, fontWeight:600, color:'var(--text-2)', background:'var(--surface)', border:'1px solid var(--border)', borderRadius:8, padding:'7px 10px', textDecoration:'none' }}>
-                    ⬇ Descargar
-                  </a>
+                  <button type="button" onClick={() => abrirPDF(false)} disabled={descargandoPdf}
+                    style={{ flex:1, textAlign:'center', fontSize:12, fontWeight:600, color:'var(--primary)', background:'var(--primary-l)', border:'1px solid var(--primary)', borderRadius:8, padding:'7px 10px', cursor:'pointer', opacity: descargandoPdf ? 0.6 : 1 }}>
+                    {descargandoPdf ? '...' : '👁 Ver PDF'}
+                  </button>
+                  <button type="button" onClick={() => abrirPDF(true)} disabled={descargandoPdf}
+                    style={{ flex:1, textAlign:'center', fontSize:12, fontWeight:600, color:'var(--text-2)', background:'var(--surface)', border:'1px solid var(--border)', borderRadius:8, padding:'7px 10px', cursor:'pointer', opacity: descargandoPdf ? 0.6 : 1 }}>
+                    {descargandoPdf ? '...' : '⬇ Descargar'}
+                  </button>
                 </div>
                 {isAuthor && (
                   <div style={{ marginTop:8 }}>
