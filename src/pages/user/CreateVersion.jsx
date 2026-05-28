@@ -23,6 +23,7 @@ export default function CreateVersion() {
   const [documento, setDocumento]       = useState(null)
   const [loading, setLoading]           = useState(true)
   const [saving, setSaving]             = useState(false)
+  const [enviarAlAdmin, setEnviarAlAdmin] = useState(true)
 
   useEffect(() => {
     api.get(`/proyectos/${id}`)
@@ -72,10 +73,14 @@ export default function CreateVersion() {
       Object.entries(form).forEach(([k, v]) => { if (v !== '') fd.append(k, v) })
       newImages.forEach(img => fd.append('imagenes', img))
       if (documento) fd.append('documento', documento)
+      fd.append('enviarAlAdmin', enviarAlAdmin)
       const { data } = await api.post(`/proyectos/${id}/versiones`, fd)
       const newId = data.data?._id || data._id
       const ver   = data.version || data.data?.version || ''
-      toast.success(`Versión ${ver} creada exitosamente. Pendiente de revisión.`)
+      const msg = enviarAlAdmin
+        ? `Versión ${ver} creada y enviada al administrador para revisión.`
+        : `Versión ${ver} creada como borrador privado.`
+      toast.success(msg)
       navigate(`/proyectos/${newId}`)
     } catch (err) {
       const errores = err.response?.data?.errors || err.response?.data?.errores
@@ -103,10 +108,13 @@ export default function CreateVersion() {
             </span>
           )}
           {verActual && <span className="badge badge-blue" style={{ fontSize:11 }}>Basado en {verActual}</span>}
-          <span className="badge badge-blue" style={{ fontSize:11 }}>📤 Enviado al admin</span>
+          {enviarAlAdmin
+            ? <span className="badge badge-blue" style={{ fontSize:11 }}>📤 Se enviará al admin</span>
+            : <span style={{ fontSize:11, color:'var(--text-3)', fontWeight:600, background:'var(--surface2)', border:'1px solid var(--border)', borderRadius:6, padding:'3px 8px' }}>🔒 Borrador privado</span>
+          }
         </div>
         <div style={{ background:'var(--primary-l)', border:'1px solid var(--primary)', borderRadius:10, padding:'10px 14px', fontSize:13, color:'var(--primary)', lineHeight:1.6 }}>
-          ℹ️ Los campos están pre-cargados con la versión actual. Modifica lo que necesites. La versión anterior quedará bloqueada y la nueva quedará <strong>pendiente de revisión</strong>.
+          ℹ️ Los campos están pre-cargados con la versión actual. Modifica lo que necesites. La versión anterior quedará bloqueada.
         </div>
       </div>
 
@@ -247,9 +255,26 @@ export default function CreateVersion() {
           <input name="tags" value={form.tags} onChange={handle} className="input" placeholder="iot, python, redes" />
         </div>
 
-        {/* Aviso: siempre se envía al admin */}
-        <div style={{ background:'var(--primary-l)', border:'1px solid var(--primary)', borderRadius:12, padding:'10px 14px', fontSize:13, color:'var(--primary)' }}>
-          📤 Esta nueva versión será enviada automáticamente al administrador para revisión.
+        {/* Toggle: enviar o no al admin */}
+        <div
+          onClick={() => setEnviarAlAdmin(v => !v)}
+          style={{ background: enviarAlAdmin ? 'var(--primary-l)' : 'var(--surface2)', border: `1px solid ${enviarAlAdmin ? 'var(--primary)' : 'var(--border)'}`, borderRadius:12, padding:'12px 16px', cursor:'pointer', userSelect:'none', transition:'all 0.2s' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            {/* switch visual */}
+            <div style={{ width:40, height:22, borderRadius:11, background: enviarAlAdmin ? 'var(--primary)' : 'var(--border2)', position:'relative', flexShrink:0, transition:'background 0.2s' }}>
+              <div style={{ position:'absolute', top:3, left: enviarAlAdmin ? 21 : 3, width:16, height:16, borderRadius:'50%', background:'white', transition:'left 0.2s', boxShadow:'0 1px 3px rgba(0,0,0,0.2)' }} />
+            </div>
+            <div>
+              <p style={{ margin:0, fontSize:13, fontWeight:700, color: enviarAlAdmin ? 'var(--primary)' : 'var(--text-2)' }}>
+                {enviarAlAdmin ? '📤 Enviar al administrador para revisión' : '🔒 Guardar como borrador privado'}
+              </p>
+              <p style={{ margin:'2px 0 0', fontSize:11, color:'var(--text-3)' }}>
+                {enviarAlAdmin
+                  ? 'El admin revisará esta versión antes de que puedas publicarla.'
+                  : 'Solo tú y tus colaboradores podrán verla. Podrás enviarla al admin más adelante.'}
+              </p>
+            </div>
+          </div>
         </div>
 
         <div style={{ display:'flex', gap:10, paddingTop:4 }}>
