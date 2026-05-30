@@ -39,9 +39,9 @@ export default function Home() {
     if (!search.trim()) { fetchProjects(); return }
     setLoading(true)
     try {
-      const { data } = await api.get('/proyectos/buscar', { params: { q: search } })
+      const { data } = await api.get('/proyectos/buscar', { params: { q: search, page, limit: 8 } })
       setProjects(data.data || [])
-      setTotalPages(1)
+      setTotalPages(data.pagination?.totalPages || 1)
     } catch { setProjects([]) }
     finally { setLoading(false) }
   }
