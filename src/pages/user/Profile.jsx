@@ -178,7 +178,14 @@ function PasswordForm({ user }) {
       await api.put('/auth/password', form)
       toast.success('Contraseña actualizada')
       setForm({ passwordactual:'', passwordnuevo:'', confirmarPassword:'' })
-    } catch (err) { toast.error(err.response?.data?.msg || 'Contraseña actual incorrecta') }
+    } catch (err) {
+      const data = err.response?.data
+      if (data?.errores?.length) {
+        data.errores.forEach(e => toast.error(e.mensaje))
+      } else {
+        toast.error(data?.msg || data?.mensaje || 'Error al cambiar la contraseña')
+      }
+    }
     finally { setLoading(false) }
   }
 
