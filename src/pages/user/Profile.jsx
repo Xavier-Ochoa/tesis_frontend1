@@ -124,17 +124,21 @@ function ProfileForm({ user, updateUser }) {
 }
 
 function PasswordForm({ user }) {
-  const [form, setForm] = useState({ passwordactual:'', passwordnuevo:'' })
+  const [form, setForm] = useState({ passwordactual:'', passwordnuevo:'', confirmarPassword:'' })
   const [loading, setLoading] = useState(false)
   const handle = e => setForm({ ...form, [e.target.name]: e.target.value })
 
   const submit = async e => {
     e.preventDefault()
+    if (form.passwordnuevo !== form.confirmarPassword) {
+      toast.error('Las contraseñas nuevas no coinciden')
+      return
+    }
     setLoading(true)
     try {
       await api.put('/auth/password', form)
       toast.success('Contraseña actualizada')
-      setForm({ passwordactual:'', passwordnuevo:'' })
+      setForm({ passwordactual:'', passwordnuevo:'', confirmarPassword:'' })
     } catch (err) { toast.error(err.response?.data?.msg || 'Contraseña actual incorrecta') }
     finally { setLoading(false) }
   }
@@ -146,8 +150,12 @@ function PasswordForm({ user }) {
         <input name="passwordactual" type="password" required value={form.passwordactual} onChange={handle} className="input" />
       </div>
       <div>
-        <label className="label" style={{ display:'flex', alignItems:'center' }}>Nueva contraseña <FieldHint required text="Mínimo 6 caracteres." /></label>
-        <input name="passwordnuevo" type="password" required value={form.passwordnuevo} onChange={handle} className="input" minLength={6} />
+        <label className="label" style={{ display:'flex', alignItems:'center' }}>Nueva contraseña <FieldHint required text="Mínimo 8 caracteres, una mayúscula, un número y un símbolo." /></label>
+        <input name="passwordnuevo" type="password" required value={form.passwordnuevo} onChange={handle} className="input" minLength={8} />
+      </div>
+      <div>
+        <label className="label" style={{ display:'flex', alignItems:'center' }}>Confirmar nueva contraseña <FieldHint required text="Repite la nueva contraseña." /></label>
+        <input name="confirmarPassword" type="password" required value={form.confirmarPassword} onChange={handle} className="input" minLength={8} />
       </div>
       <button type="submit" disabled={loading} className="btn-primary">
         {loading ? 'Actualizando...' : 'Cambiar contraseña'}
