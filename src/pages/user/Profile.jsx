@@ -167,6 +167,9 @@ function PasswordForm({ user }) {
   const handle = e => setForm({ ...form, [e.target.name]: e.target.value })
   const toggle = field => setShow(s => ({ ...s, [field]: !s[field] }))
 
+  const noCoinciden = form.confirmarPassword.length > 0 && form.passwordnuevo !== form.confirmarPassword
+  const siCoinciden = form.confirmarPassword.length > 0 && form.passwordnuevo === form.confirmarPassword
+
   const submit = async e => {
     e.preventDefault()
     if (form.passwordnuevo !== form.confirmarPassword) {
@@ -201,9 +204,33 @@ function PasswordForm({ user }) {
       </div>
       <div>
         <label className="label" style={{ display:'flex', alignItems:'center' }}>Confirmar nueva contraseña <FieldHint required text="Repite la nueva contraseña." /></label>
-        <PasswordInput name="confirmarPassword" value={form.confirmarPassword} onChange={handle} show={show.confirmarPassword} onToggle={() => toggle('confirmarPassword')} required minLength={8} />
+        <PasswordInput
+          name="confirmarPassword"
+          value={form.confirmarPassword}
+          onChange={handle}
+          show={show.confirmarPassword}
+          onToggle={() => toggle('confirmarPassword')}
+          required
+          minLength={8}
+          style={{
+            paddingRight: '2.5rem',
+            borderColor: noCoinciden ? '#ef4444' : siCoinciden ? '#10b981' : undefined,
+            boxShadow: noCoinciden ? '0 0 0 2px rgba(239,68,68,0.2)' : siCoinciden ? '0 0 0 2px rgba(16,185,129,0.2)' : undefined,
+            transition: 'border-color 0.2s, box-shadow 0.2s'
+          }}
+        />
+        {noCoinciden && (
+          <p style={{ margin:'4px 0 0', fontSize:12, color:'#ef4444', display:'flex', alignItems:'center', gap:4 }}>
+            <span>✗</span> Las contraseñas no coinciden
+          </p>
+        )}
+        {siCoinciden && (
+          <p style={{ margin:'4px 0 0', fontSize:12, color:'#10b981', display:'flex', alignItems:'center', gap:4 }}>
+            <span>✓</span> Las contraseñas coinciden
+          </p>
+        )}
       </div>
-      <button type="submit" disabled={loading} className="btn-primary">
+      <button type="submit" disabled={loading || noCoinciden} className="btn-primary">
         {loading ? 'Actualizando...' : 'Cambiar contraseña'}
       </button>
     </form>
