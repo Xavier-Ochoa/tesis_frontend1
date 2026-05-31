@@ -153,7 +153,7 @@ export default function Navbar() {
                   {/* User info */}
                   <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', background: 'var(--surface2)' }}>
                     <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-1)', margin: 0 }}>{user.nombre} {user.apellido}</p>
-                    <p style={{ fontSize: 11, color: 'var(--text-3)', margin: '2px 0 6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.correoInstitucional}</p>
+                    <p style={{ fontSize: 11, color: 'var(--text-3)', margin: '2px 0 6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</p>
                     <span style={{ fontSize: 10, fontWeight: 700, background: roleBadgeColor, color: 'white', padding: '2px 8px', borderRadius: 100, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                       {user.rol}
                     </span>
