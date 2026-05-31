@@ -73,7 +73,7 @@ function ProfileForm({ user, updateUser }) {
         </div>
         <div>
           <p style={{ fontFamily:'Syne,sans-serif', fontWeight:700, fontSize:15, color:'var(--text-1)', margin:'0 0 2px' }}>{user?.nombre} {user?.apellido}</p>
-          <p style={{ fontSize:12, color:'var(--text-3)', margin:'0 0 4px' }}>{user?.correoInstitucional}</p>
+          <p style={{ fontSize:12, color:'var(--text-3)', margin:'0 0 4px' }}>{user?.email}</p>
           <span style={{ fontSize:10, fontWeight:700, background:'var(--primary)', color:'white', padding:'2px 8px', borderRadius:100, textTransform:'uppercase' }}>{user?.rol}</span>
         </div>
         <input id="photo-input" type="file" accept="image/*" className="hidden" onChange={handlePhoto} style={{ display:'none' }} />
