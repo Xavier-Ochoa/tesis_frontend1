@@ -47,7 +47,7 @@ function CambiarRolModal({ user, onClose, onSuccess }) {
           </div>
           <div>
             <p style={{ fontWeight:700, color:'var(--text-1)', margin:0 }}>{user.nombre} {user.apellido}</p>
-            <p style={{ fontSize:12, color:'var(--text-3)', margin:0 }}>{user.correoInstitucional}</p>
+            <p style={{ fontSize:12, color:'var(--text-3)', margin:0 }}>{user.email}</p>
           </div>
           <span style={{ marginLeft:'auto', fontSize:11, fontWeight:700, padding:'3px 10px', borderRadius:100, background: rolBg[user.rol] || 'var(--surface2)', color: rolColor[user.rol] || 'var(--text-2)', textTransform:'uppercase' }}>
             {user.rol}
@@ -196,7 +196,7 @@ export default function AdminUsers() {
                               {u.nombre} {u.apellido}
                               {esSelf && <span style={{ marginLeft:6, fontSize:10, background:'var(--primary)', color:'white', padding:'1px 6px', borderRadius:10 }}>TÚ</span>}
                             </p>
-                            <p style={{ fontSize:11, color:'var(--text-3)', margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:180 }}>{u.correoInstitucional}</p>
+                            <p style={{ fontSize:11, color:'var(--text-3)', margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:180 }}>{u.email}</p>
                           </div>
                         </div>
                       </td>
@@ -280,7 +280,7 @@ export default function AdminUsers() {
               </div>
               <div style={{ flex:1, minWidth:0 }}>
                 <p style={{ fontWeight:700, color:'var(--text-1)', margin:'0 0 2px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{u.nombre} {u.apellido}</p>
-                <p style={{ fontSize:12, color:'var(--text-3)', margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{u.correoInstitucional}</p>
+                <p style={{ fontSize:12, color:'var(--text-3)', margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{u.email}</p>
               </div>
               <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
                 <span style={{ fontSize:11, fontWeight:700, padding:'3px 10px', borderRadius:100, background: rolBg[u.rol] || 'var(--surface2)', color: rolColor[u.rol] || 'var(--text-2)', textTransform:'uppercase' }}>
