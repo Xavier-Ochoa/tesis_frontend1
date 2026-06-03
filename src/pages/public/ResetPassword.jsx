@@ -42,7 +42,10 @@ export default function ResetPassword() {
   const handleSubmit = async e => {
     e.preventDefault()
     setPassError('')
-    if (password.length < 6) { setPassError('La contraseña debe tener al menos 6 caracteres'); return }
+    if (password.length < 8) { setPassError('La contraseña debe tener al menos 8 caracteres'); return }
+    if (!/[A-Z]/.test(password)) { setPassError('La contraseña debe incluir al menos una mayúscula'); return }
+    if (!/[0-9]/.test(password)) { setPassError('La contraseña debe incluir al menos un número'); return }
+    if (!/[^A-Za-z0-9]/.test(password)) { setPassError('La contraseña debe incluir al menos un símbolo (ej. !, @, #)'); return }
     if (password !== confirm) { setPassError('Las contraseñas no coinciden'); return }
     setLoading(true)
     try {
@@ -209,10 +212,10 @@ export default function ResetPassword() {
                     value={password}
                     onChange={e => { setPassword(e.target.value); setPassError('') }}
                     required
-                    minLength={6}
+                    minLength={8}
                     className="input"
                     style={{ paddingRight: 44, ...(passError ? { borderColor: 'rgba(239,68,68,0.5)' } : {}) }}
-                    placeholder="Mínimo 6 caracteres"
+                    placeholder="Mínimo 8 caracteres"
                     autoComplete="new-password"
                     autoFocus
                   />
@@ -223,12 +226,12 @@ export default function ResetPassword() {
                   <div style={{ marginTop: 6 }}>
                     <div style={{ display: 'flex', gap: 4, marginBottom: 3 }}>
                       {[0, 1, 2, 3].map(i => {
-                        const strength = password.length < 6 ? 0 : password.length < 8 ? 1 : /[A-Z]/.test(password) && /[0-9]/.test(password) ? 3 : 2
-                        return <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: i < strength + 1 ? ['#ef4444','#f97316','#eab308','#22c55e'][strength - 1] || 'var(--border2)' : 'var(--border2)', transition: 'background 0.3s' }} />
+                        const strength = password.length < 8 ? 0 : (() => { const u=/[A-Z]/.test(password), n=/[0-9]/.test(password), s=/[^A-Za-z0-9]/.test(password); return [u,n,s].filter(Boolean).length })()
+                        return <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: i < strength + 1 ? ['#f97316','#eab308','#22c55e'][strength - 1] || 'var(--border2)' : 'var(--border2)', transition: 'background 0.3s' }} />
                       })}
                     </div>
                     <p style={{ fontSize: 10, color: 'var(--text-3)', margin: 0 }}>
-                      {password.length < 6 ? 'Muy corta' : password.length < 8 ? 'Débil' : /[A-Z]/.test(password) && /[0-9]/.test(password) ? 'Fuerte' : 'Moderada'}
+                      {password.length < 8 ? 'Muy corta' : (() => { const u=/[A-Z]/.test(password), n=/[0-9]/.test(password), s=/[^A-Za-z0-9]/.test(password); const score=[u,n,s].filter(Boolean).length; return score===3?'Fuerte':score===2?'Moderada':'Débil' })()}
                     </p>
                   </div>
                 )}
