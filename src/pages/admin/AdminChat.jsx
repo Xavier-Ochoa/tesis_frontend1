@@ -113,6 +113,51 @@ export default function AdminChat() {
   const [cargandoChat, setCargandoChat]             = useState(false)
   const bottomRef = useRef(null)
 
+  // ── Buscador de usuarios ────────────────────────────────────────────────
+  const [busqueda, setBusqueda]                     = useState('')
+  const [resultados, setResultados]                 = useState([])
+  const [buscando, setBuscando]                     = useState(false)
+  const [mostrarBuscador, setMostrarBuscador]       = useState(false)
+  const busquedaRef                                 = useRef(null)
+  const debounceRef                                 = useRef(null)
+
+  const buscarUsuarios = (texto) => {
+    setBusqueda(texto)
+    clearTimeout(debounceRef.current)
+    if (!texto.trim()) { setResultados([]); return }
+    debounceRef.current = setTimeout(async () => {
+      setBuscando(true)
+      try {
+        const { data } = await api.get('/admin/estudiantes', { params: { search: texto, limit: 8 } })
+        setResultados(data.data || data.usuarios || [])
+      } catch {
+        setResultados([])
+      } finally {
+        setBuscando(false)
+      }
+    }, 350)
+  }
+
+  const seleccionarDesdeResultado = (u) => {
+    setBusqueda('')
+    setResultados([])
+    setMostrarBuscador(false)
+    const conv = {
+      userId:        u._id,
+      nombre:        u.nombre,
+      apellido:      u.apellido,
+      email:         u.correoInstitucional || u.email,
+      ultimoMensaje: '',
+      ultimaFecha:   null,
+      sinLeer:       0,
+    }
+    // Agregar a lista si no existe
+    setConversaciones((prev) =>
+      prev.find(c => c.userId === u._id) ? prev : [conv, ...prev]
+    )
+    seleccionarUsuario(conv)
+  }
+
   // ── Realtime: mensajes del chat seleccionado ────────────────────────────
   const { mensajes, setMensajes } = usePusherChat({
     userId:         user?._id,
@@ -302,6 +347,95 @@ export default function AdminChat() {
               }}>
                 Conversaciones
               </p>
+
+              {/* ── Buscador de usuarios ── */}
+              <div style={{ padding:'4px 8px 6px', flexShrink:0, position:'relative' }} ref={busquedaRef}>
+                {!mostrarBuscador ? (
+                  <button
+                    onClick={() => { setMostrarBuscador(true); setTimeout(() => busquedaRef.current?.querySelector('input')?.focus(), 50) }}
+                    style={{
+                      width:'100%', padding:'5px 8px',
+                      background:'#f0f2f5', border:'1px dashed #ccd0d5',
+                      borderRadius:8, cursor:'pointer',
+                      fontSize:11, color:'#65676b', fontWeight:600,
+                      display:'flex', alignItems:'center', gap:5,
+                      transition:'background 0.15s',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#e4e6ea'}
+                    onMouseLeave={e => e.currentTarget.style.background = '#f0f2f5'}
+                  >
+                    <span>🔍</span> Nueva conversación
+                  </button>
+                ) : (
+                  <div>
+                    <div style={{ display:'flex', gap:4, alignItems:'center' }}>
+                      <input
+                        value={busqueda}
+                        onChange={e => buscarUsuarios(e.target.value)}
+                        placeholder="Buscar usuario..."
+                        style={{
+                          flex:1, padding:'5px 8px',
+                          border:'1px solid #0084ff', borderRadius:8,
+                          fontSize:12, color:'#050505',
+                          background:'#fff', outline:'none',
+                        }}
+                        onKeyDown={e => e.key === 'Escape' && (setMostrarBuscador(false), setBusqueda(''), setResultados([]))}
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => { setMostrarBuscador(false); setBusqueda(''); setResultados([]) }}
+                        style={{ background:'none', border:'none', cursor:'pointer', color:'#8a8d91', fontSize:14, padding:2, lineHeight:1 }}
+                      >×</button>
+                    </div>
+                    {/* Resultados */}
+                    {(buscando || resultados.length > 0) && (
+                      <div style={{
+                        position:'absolute', left:8, right:8, top:'100%',
+                        background:'#fff', border:'1px solid #e4e6ea',
+                        borderRadius:8, boxShadow:'0 4px 12px rgba(0,0,0,0.12)',
+                        zIndex:10, maxHeight:200, overflowY:'auto',
+                      }}>
+                        {buscando ? (
+                          <p style={{ padding:'10px 12px', fontSize:12, color:'#8a8d91', margin:0 }}>Buscando...</p>
+                        ) : resultados.length === 0 ? (
+                          <p style={{ padding:'10px 12px', fontSize:12, color:'#8a8d91', margin:0 }}>Sin resultados</p>
+                        ) : resultados.map(u => (
+                          <div
+                            key={u._id}
+                            onClick={() => seleccionarDesdeResultado(u)}
+                            style={{
+                              padding:'8px 12px', cursor:'pointer',
+                              display:'flex', alignItems:'center', gap:8,
+                              borderBottom:'1px solid #f0f2f5',
+                              transition:'background 0.12s',
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = '#f0f2f5'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                          >
+                            <div style={{
+                              width:28, height:28, borderRadius:'50%', flexShrink:0,
+                              background:'#ccd0d5', color:'#444',
+                              display:'flex', alignItems:'center', justifyContent:'center',
+                              fontSize:11, fontWeight:700,
+                            }}>
+                              {`${u.nombre?.[0] || ''}${u.apellido?.[0] || ''}`.toUpperCase() || '👤'}
+                            </div>
+                            <div style={{ minWidth:0 }}>
+                              <p style={{ margin:0, fontSize:12, fontWeight:700, color:'#050505', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                                {u.nombre} {u.apellido}
+                              </p>
+                              <p style={{ margin:0, fontSize:10, color:'#8a8d91', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                                {u.correoInstitucional || u.email}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
               <div className="adm-conv-scroll" style={{ flex:1, overflowY:'auto', paddingBottom:6 }}>
                 {cargandoLista ? (
                   <div style={{ padding:20, textAlign:'center' }}><Spinner /></div>
