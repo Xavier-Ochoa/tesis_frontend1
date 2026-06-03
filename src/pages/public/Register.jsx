@@ -118,7 +118,7 @@ export default function Register() {
                 <label className="label" style={{ display: 'flex', alignItems: 'center' }}>Carrera <FieldHint text="Selecciona tu carrera." /></label>
                 <select name="carrera" value={form.carrera} onChange={handle} className="input">
                   <option value="">-- Selecciona una carrera --</option>
-                  {['Agua y Saneamiento Ambiental','Desarrollo de Software','Electromecánica','Redes y Telecomunicaciones','Procesamiento de Alimentos','Procesamiento industrial de la madera'].map(c => (
+                  {['Agua y Saneamiento Ambiental','Desarrollo de Software','Electromecánica','Redes y Telecomunicaciones','Procesamiento de Alimentos','Procesamiento Industrial de la Madera'].map(c => (
                     <option key={c} value={c}>{c}</option>
                   ))}
                 </select>
