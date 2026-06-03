@@ -19,7 +19,10 @@ export const AuthProvider = ({ children }) => {
         setUser(data)
         localStorage.setItem('esfot_user', JSON.stringify(data))
       } catch {
-        logout()
+        setUser(null)
+        setToken(null)
+        localStorage.removeItem('esfot_token')
+        localStorage.removeItem('esfot_user')
       } finally {
         setLoading(false)
       }
