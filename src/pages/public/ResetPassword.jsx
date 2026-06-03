@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, Fragment } from 'react'
 import { Link, useNavigate, useLocation, useParams } from 'react-router-dom'
 import api from '../../api/axios'
 import toast from 'react-hot-toast'
@@ -142,8 +142,8 @@ export default function ResetPassword() {
           {/* Indicador de pasos */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: '1.75rem' }}>
             {[1, 2].map((s, i) => (
-              <>
-                <div key={s} style={{
+              <Fragment key={s}>
+                <div style={{
                   display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1,
                 }}>
                   <div style={{
@@ -162,7 +162,7 @@ export default function ResetPassword() {
                 {i === 0 && (
                   <div style={{ height: 2, width: 40, background: step > 1 ? 'var(--primary)' : 'var(--border2)', transition: 'background 0.3s', marginBottom: 20 }} />
                 )}
-              </>
+              </Fragment>
             ))}
           </div>
 
