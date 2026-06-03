@@ -23,9 +23,9 @@ export default function Login() {
     setLoading(true)
     try {
       const { data } = await api.post('/auth/login', form)
-      login(data.usuario || data, data.token)
+      login(data, data.token)
       toast.success('¡Bienvenido!')
-      navigate(data.usuario?.rol === 'admin' ? '/admin' : '/dashboard')
+      navigate(data.rol === 'admin' ? '/admin' : '/dashboard')
     } catch (err) {
       const msg = err.response?.data?.msg || ''
 
