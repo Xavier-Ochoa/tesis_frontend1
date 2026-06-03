@@ -172,6 +172,22 @@ function PasswordForm({ user }) {
 
   const submit = async e => {
     e.preventDefault()
+    if (form.passwordnuevo.length < 8) {
+      toast.error('La nueva contraseña debe tener al menos 8 caracteres')
+      return
+    }
+    if (!/[A-Z]/.test(form.passwordnuevo)) {
+      toast.error('La nueva contraseña debe incluir al menos una mayúscula')
+      return
+    }
+    if (!/[0-9]/.test(form.passwordnuevo)) {
+      toast.error('La nueva contraseña debe incluir al menos un número')
+      return
+    }
+    if (!/[^A-Za-z0-9]/.test(form.passwordnuevo)) {
+      toast.error('La nueva contraseña debe incluir al menos un símbolo (ej. !, @, #)')
+      return
+    }
     if (form.passwordnuevo !== form.confirmarPassword) {
       toast.error('Las contraseñas nuevas no coinciden')
       return
