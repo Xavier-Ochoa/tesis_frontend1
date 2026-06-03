@@ -14,9 +14,29 @@ export default function Register() {
 
   const handle = e => setForm({ ...form, [e.target.name]: e.target.value })
 
-  // Al pulsar "Crear cuenta" → mostrar modal de confirmación
+  // Validación de fortaleza de contraseña (igual que backend)
+  const getPasswordStrength = (pwd) => {
+    if (pwd.length === 0) return { level: -1, label: '', color: 'var(--border2)' }
+    if (pwd.length < 8)   return { level: 0, label: 'Muy corta', color: '#ef4444' }
+    const hasUpper  = /[A-Z]/.test(pwd)
+    const hasNumber = /[0-9]/.test(pwd)
+    const hasSymbol = /[^A-Za-z0-9]/.test(pwd)
+    const score = [hasUpper, hasNumber, hasSymbol].filter(Boolean).length
+    if (score === 0) return { level: 1, label: 'Débil', color: '#f97316' }
+    if (score === 1) return { level: 1, label: 'Débil', color: '#f97316' }
+    if (score === 2) return { level: 2, label: 'Moderada', color: '#eab308' }
+    return { level: 3, label: 'Fuerte', color: '#22c55e' }
+  }
+  const pwdStrength = getPasswordStrength(form.contraseña)
+  const pwdValid = pwdStrength.level === 3
+
+  // Al pulsar "Crear cuenta" → validar contraseña antes de mostrar modal
   const handlePreSubmit = e => {
     e.preventDefault()
+    if (!pwdValid) {
+      toast.error('La contraseña debe tener mínimo 8 caracteres, una mayúscula, un número y un símbolo.')
+      return
+    }
     setShowConfirm(true)
   }
 
@@ -68,8 +88,23 @@ export default function Register() {
               <input name="correoInstitucional" type="email" required value={form.correoInstitucional} onChange={handle} className="input" placeholder="usuario@epn.edu.ec" />
             </div>
             <div>
-              <label className="label" style={{ display: 'flex', alignItems: 'center' }}>Contraseña <FieldHint required text="Mínimo 6 caracteres." /></label>
-              <input name="contraseña" type="password" required value={form.contraseña} onChange={handle} className="input" placeholder="Mínimo 6 caracteres" />
+              <label className="label" style={{ display: 'flex', alignItems: 'center' }}>Contraseña <FieldHint required text="Mínimo 8 caracteres, una mayúscula, un número y un símbolo." /></label>
+              <input name="contraseña" type="password" required value={form.contraseña} onChange={handle} className="input" placeholder="Mínimo 8 caracteres" minLength={8} />
+              {form.contraseña.length > 0 && (
+                <div style={{ marginTop: 6 }}>
+                  <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
+                    {[0,1,2,3].map(i => (
+                      <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: i <= pwdStrength.level ? pwdStrength.color : 'var(--border2)', transition: 'background 0.3s' }} />
+                    ))}
+                  </div>
+                  <span style={{ fontSize: 11, color: pwdStrength.color, fontWeight: 600 }}>{pwdStrength.label}</span>
+                  {!pwdValid && (
+                    <p style={{ fontSize: 11, color: 'var(--text-3)', margin: '2px 0 0' }}>
+                      Debe incluir: mayúscula, número y símbolo (ej. <code>!</code>, <code>@</code>, <code>#</code>)
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
             <div>
               <label className="label" style={{ display: 'flex', alignItems: 'center' }}>Rol <FieldHint required text="Estudiante: proyectos requieren aprobación. Docente: publica directamente." /></label>
