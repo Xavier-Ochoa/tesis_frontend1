@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 
 export default function ProjectCard({ project }) {
   const {
-    _id, titulo, descripcion, categoria, carrera, tecnologias,
+    _id, titulo, descripcion, categoria, tecnologias,
     imagenes, estado, autor, likes = [],
     tipoProyecto, version, esUltimaVersion, proyecto_id,
   } = project
