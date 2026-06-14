@@ -17,7 +17,11 @@ export default function Donations() {
     try {
       await api.post('/donaciones', { paymentMethodId: form.paymentMethodId, monto: Number(form.monto), nombre: form.nombre, mensaje: form.mensaje })
       setDone(true); toast.success('¡Gracias por tu donación!')
-    } catch (err) { toast.error(err.response?.data?.msg || 'Error al procesar el pago') }
+    } catch (err) {
+      const data = err.response?.data
+      if (data?.errores?.length) data.errores.forEach(e => toast.error(e.mensaje))
+      else toast.error(data?.msg || 'Error al procesar el pago')
+    }
     finally { setLoading(false) }
   }
 
