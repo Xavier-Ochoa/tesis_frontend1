@@ -61,6 +61,23 @@ export default function MyProjects() {
 
   useEffect(() => { fetchProjects() }, [filtroEstado, filtroEnviar])
 
+  const handleEnviarRevision = (p) => {
+    setConfirmModal({
+      title: '📤 ¿Enviar a revisión?',
+      message: 'El proyecto será enviado al administrador para que pueda revisarlo, aprobarlo o rechazarlo.\n\nEsta acción no se puede deshacer. Una vez enviado, el proyecto no podrá volver a ser privado.',
+      confirmLabel: 'Sí, enviar al admin',
+      danger: false,
+      onConfirm: async () => {
+        try {
+          await api.put(`/proyectos/${p._id}`, { enviarAlAdmin: true })
+          toast.success('Proyecto enviado al administrador para revisión.')
+          fetchProjects()
+        } catch (err) { toast.error(err.response?.data?.message || 'No se pudo enviar') }
+        setConfirmModal(null)
+      }
+    })
+  }
+
   const handlePublicar = (p) => {
     setConfirmModal({
       title: '🌐 ¿Publicar este proyecto?',
@@ -256,6 +273,12 @@ export default function MyProjects() {
                       {canVer && (
                         <button onClick={() => navigate(`/mis-proyectos/${p._id}/nueva-version`)} className="btn-secondary btn-sm">
                           🔖 Nueva versión
+                        </button>
+                      )}
+
+                      {!yaEnviado && p.rolEnProyecto === 'autor' && (
+                        <button onClick={() => handleEnviarRevision(p)} className="btn-secondary btn-sm" title="Enviar al administrador para revisión">
+                          📤 Enviar a revisión
                         </button>
                       )}
 
