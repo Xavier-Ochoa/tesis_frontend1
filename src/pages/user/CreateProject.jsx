@@ -90,32 +90,10 @@ function AIModal({ descripcion, onSelect, onClose }) {
   )
 }
 
-// ── Modal confirmación enviarAlAdmin ─────────────────────────────────────────
-function ConfirmEnviarModal({ onConfirm, onCancel }) {
-  return (
-    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.65)', zIndex:300, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
-      <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:20, width:'100%', maxWidth:440, padding:'1.75rem', boxShadow:'var(--shadow-lg)', animation:'slideUp 0.2s ease-out' }}>
-        <div style={{ fontSize:36, textAlign:'center', marginBottom:12 }}>⚠️</div>
-        <h2 style={{ fontFamily:'Syne,sans-serif', fontSize:18, fontWeight:800, color:'var(--text-1)', textAlign:'center', margin:'0 0 10px' }}>¿Enviar al administrador?</h2>
-        <p style={{ fontSize:13, color:'var(--text-2)', lineHeight:1.65, margin:'0 0 16px', textAlign:'center' }}>
-          Al marcar esta opción, el proyecto será visible para el administrador y podrá ser revisado, aprobado o rechazado.<br/><br/>
-          <strong>Esta acción no se puede deshacer.</strong> Una vez enviado al admin, el proyecto no podrá volver a ser privado.
-        </p>
-        <div style={{ display:'flex', gap:10 }}>
-          <button onClick={onConfirm} className="btn-primary" style={{ flex:1 }}>Sí, enviar al admin</button>
-          <button onClick={onCancel} className="btn-secondary" style={{ flex:1 }}>Cancelar</button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 // ── Formulario ────────────────────────────────────────────────────────────────
 export default function CreateProject() {
   const navigate = useNavigate()
   const [form, setForm]               = useState(defaultForm)
-  const [enviarAlAdmin, setEnviarAlAdmin] = useState(false)
-  const [showConfirmEnviar, setShowConfirmEnviar] = useState(false)
   const [images, setImages]           = useState([])
   const [previews, setPreviews]       = useState([])
   const [documento, setDocumento]     = useState(null)
@@ -125,13 +103,6 @@ export default function CreateProject() {
   const handle = e => {
     const { name, value } = e.target
     setForm({ ...form, [name]: value })
-  }
-
-  const handleCheckEnviarAlAdmin = (e) => {
-    if (e.target.checked && !enviarAlAdmin) {
-      setShowConfirmEnviar(true)
-    }
-    // Si desmarca no se permite (ya se confirmó antes o nunca se activó)
   }
 
   const handleImages = e => {
@@ -154,7 +125,7 @@ export default function CreateProject() {
     try {
       const fd = new FormData()
       Object.entries(form).forEach(([k, v]) => { if (v !== '') fd.append(k, v) })
-      fd.append('enviarAlAdmin', enviarAlAdmin ? 'true' : 'false')
+      fd.append('enviarAlAdmin', 'false')
       images.forEach(img => fd.append('imagenes', img))
       if (documento) fd.append('documento', documento)
       const { data } = await api.post('/proyectos', fd)
@@ -162,7 +133,7 @@ export default function CreateProject() {
       const version    = data.data?.version || data.version || '001'
       toast.success(
         proyectoId
-          ? `Proyecto creado con código ${proyectoId}, versión ${version}.${enviarAlAdmin ? ' Pendiente de revisión del admin.' : ''}`
+          ? `Proyecto creado con código ${proyectoId}, versión ${version}.`
           : 'Proyecto creado exitosamente.'
       )
       navigate(`/proyectos/${data.data?._id || data._id}`)
@@ -177,7 +148,7 @@ export default function CreateProject() {
     <div className="page" style={{ maxWidth:680, animation:'slideUp 0.4s ease-out' }}>
       <div style={{ marginBottom:'1.75rem' }}>
         <h1 style={{ fontFamily:'Syne,sans-serif', fontSize:26, fontWeight:800, color:'var(--text-1)', margin:'0 0 4px', letterSpacing:'-0.03em' }}>Nuevo Proyecto</h1>
-        <p style={{ fontSize:13, color:'var(--text-3)', margin:0 }}>Los proyectos se crean como privados. Puedes enviarlo al admin para revisión activando la opción correspondiente.</p>
+        <p style={{ fontSize:13, color:'var(--text-3)', margin:0 }}>Los proyectos se crean como privados. Desde el detalle del proyecto podrás enviarlo al administrador para revisión.</p>
       </div>
 
       <form onSubmit={submit} style={{ display:'flex', flexDirection:'column', gap:'1.25rem' }}>
@@ -318,38 +289,6 @@ export default function CreateProject() {
           <input name="palabrasClave" value={form.palabrasClave} onChange={handle} className="input" placeholder="iot, python, redes" />
         </div>
 
-        {/* ── Enviar al Admin ── */}
-        <div style={{ background:'var(--surface2)', border:'1px solid var(--border)', borderRadius:14, padding:'1rem 1.25rem' }}>
-          <label style={{ display:'flex', alignItems:'flex-start', gap:12, cursor: enviarAlAdmin ? 'default' : 'pointer' }}>
-            <div style={{ position:'relative', marginTop:2, flexShrink:0 }}>
-              <input
-                type="checkbox"
-                checked={enviarAlAdmin}
-                onChange={handleCheckEnviarAlAdmin}
-                disabled={enviarAlAdmin}
-                style={{ width:18, height:18, cursor: enviarAlAdmin ? 'default' : 'pointer', accentColor:'var(--primary)' }}
-              />
-            </div>
-            <div>
-              <div style={{ fontWeight:700, fontSize:14, color:'var(--text-1)', marginBottom:3 }}>
-                📤 Enviar al administrador
-                {enviarAlAdmin && <span style={{ marginLeft:8, fontSize:11, background:'var(--primary)', color:'white', padding:'2px 8px', borderRadius:20, fontWeight:600 }}>ACTIVADO</span>}
-              </div>
-              <div style={{ fontSize:12, color:'var(--text-3)', lineHeight:1.55 }}>
-                {enviarAlAdmin
-                  ? 'Este proyecto será visible para el administrador y podrá ser revisado. Esta configuración no puede revertirse.'
-                  : 'Al activar esta opción, el proyecto será enviado al admin para revisión. Podrá ser aprobado o rechazado. Esta acción no se puede deshacer.'}
-              </div>
-            </div>
-          </label>
-          {enviarAlAdmin && (
-            <div style={{ marginTop:10, padding:'8px 12px', borderRadius:8, background:'var(--warning-l)', border:'1px solid var(--warning)', fontSize:12, color:'var(--warning)', display:'flex', gap:6 }}>
-              <span>⚠️</span>
-              <span>Una vez enviado al admin, el proyecto no podrá volver a ser privado ni podrá eliminarse permanentemente.</span>
-            </div>
-          )}
-        </div>
-
         <div style={{ display:'flex', gap:10, paddingTop:4 }}>
           <button type="submit" disabled={loading} className="btn-primary btn-lg" style={{ flex:1 }}>{loading ? 'Creando...' : 'Crear Proyecto'}</button>
           <button type="button" onClick={() => navigate(-1)} className="btn-secondary btn-lg" style={{ flex:1 }}>Cancelar</button>
@@ -364,12 +303,6 @@ export default function CreateProject() {
         />
       )}
 
-      {showConfirmEnviar && (
-        <ConfirmEnviarModal
-          onConfirm={() => { setEnviarAlAdmin(true); setShowConfirmEnviar(false) }}
-          onCancel={() => { setShowConfirmEnviar(false) }}
-        />
-      )}
     </div>
   )
 }
