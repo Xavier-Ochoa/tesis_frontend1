@@ -12,25 +12,6 @@ const CARRERAS = [
   'Redes y Telecomunicaciones','Procesamiento de Alimentos','Procesamiento Industrial de la Madera',
 ]
 
-function ConfirmEnviarModal({ onConfirm, onCancel }) {
-  return (
-    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.65)', zIndex:300, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
-      <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:20, width:'100%', maxWidth:440, padding:'1.75rem', boxShadow:'var(--shadow-lg)', animation:'slideUp 0.2s ease-out' }}>
-        <div style={{ fontSize:36, textAlign:'center', marginBottom:12 }}>⚠️</div>
-        <h2 style={{ fontFamily:'Syne,sans-serif', fontSize:18, fontWeight:800, color:'var(--text-1)', textAlign:'center', margin:'0 0 10px' }}>¿Enviar al administrador?</h2>
-        <p style={{ fontSize:13, color:'var(--text-2)', lineHeight:1.65, margin:'0 0 16px', textAlign:'center' }}>
-          Al activar esta opción, el proyecto será visible para el administrador y podrá ser revisado.<br/><br/>
-          <strong>Esta acción no se puede deshacer.</strong> Una vez enviado al admin, el proyecto no podrá volver a ser privado.
-        </p>
-        <div style={{ display:'flex', gap:10 }}>
-          <button onClick={onConfirm} className="btn-primary" style={{ flex:1 }}>Sí, enviar al admin</button>
-          <button onClick={onCancel} className="btn-secondary" style={{ flex:1 }}>Cancelar</button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export default function EditProject() {
   const { id }   = useParams()
   const navigate = useNavigate()
@@ -38,8 +19,6 @@ export default function EditProject() {
 
   const [project, setProject]             = useState(null)
   const [form, setForm]                   = useState(null)
-  const [enviarAlAdmin, setEnviarAlAdmin] = useState(false)
-  const [showConfirm, setShowConfirm]     = useState(false)
   const [existingImages, setExisting]     = useState([])
   const [newImages, setNewImages]         = useState([])
   const [newPreviews, setNewPreviews]     = useState([])
@@ -74,7 +53,6 @@ export default function EditProject() {
         setProject(p)
         setExisting(p.imagenes || [])
         setDocActual(p.documentos?.[0] || null)
-        setEnviarAlAdmin(p.enviarAlAdmin ?? false)
 
         const autorId = p.autor?._id || p.autor
         if (user?._id === autorId) setRol('autor')
@@ -101,10 +79,6 @@ export default function EditProject() {
   const handle = e => {
     const { name, value } = e.target
     setForm({ ...form, [name]: value })
-  }
-
-  const handleCheckEnviar = (e) => {
-    if (e.target.checked && !enviarAlAdmin) setShowConfirm(true)
   }
 
   const handleNewImages = e => {
@@ -147,7 +121,6 @@ export default function EditProject() {
         await api.put(`/proyectos/${id}/colaborador`, fd)
       } else {
         Object.entries(form).forEach(([k, v]) => { if (v !== '') fd.append(k, v) })
-        fd.append('enviarAlAdmin', enviarAlAdmin ? 'true' : 'false')
         newImages.forEach(img => fd.append('imagenes', img))
         if (nuevoDoc) fd.append('documento', nuevoDoc)
         await api.put(`/proyectos/${id}`, fd)
@@ -327,38 +300,6 @@ export default function EditProject() {
               <label className="label">Línea de Investigación</label>
               <input name="lineaInvestigacion" value={form.lineaInvestigacion} onChange={handle} className="input" placeholder="Área o materia relacionada con el proyecto" />
             </div>
-
-            {/* ── Enviar al Admin ── */}
-            <div style={{ background:'var(--surface2)', border:'1px solid var(--border)', borderRadius:14, padding:'1rem 1.25rem' }}>
-              <label style={{ display:'flex', alignItems:'flex-start', gap:12, cursor: yaEnviado ? 'default' : 'pointer' }}>
-                <div style={{ marginTop:2, flexShrink:0 }}>
-                  <input
-                    type="checkbox"
-                    checked={enviarAlAdmin}
-                    onChange={handleCheckEnviar}
-                    disabled={yaEnviado}
-                    style={{ width:18, height:18, cursor: yaEnviado ? 'default' : 'pointer', accentColor:'var(--primary)' }}
-                  />
-                </div>
-                <div>
-                  <div style={{ fontWeight:700, fontSize:14, color:'var(--text-1)', marginBottom:3 }}>
-                    📤 Enviar al administrador
-                    {enviarAlAdmin && <span style={{ marginLeft:8, fontSize:11, background:'var(--primary)', color:'white', padding:'2px 8px', borderRadius:20, fontWeight:600 }}>ACTIVADO</span>}
-                  </div>
-                  <div style={{ fontSize:12, color:'var(--text-3)', lineHeight:1.55 }}>
-                    {enviarAlAdmin
-                      ? 'Este proyecto es visible para el administrador y puede ser revisado. No puede revertirse.'
-                      : 'Activa esta opción para enviar el proyecto al admin para revisión. No se puede deshacer.'}
-                  </div>
-                </div>
-              </label>
-              {enviarAlAdmin && (
-                <div style={{ marginTop:10, padding:'8px 12px', borderRadius:8, background:'var(--warning-l)', border:'1px solid var(--warning)', fontSize:12, color:'var(--warning)', display:'flex', gap:6 }}>
-                  <span>⚠️</span>
-                  <span>Una vez enviado al admin, el proyecto no podrá volver a ser privado ni eliminarse permanentemente.</span>
-                </div>
-              )}
-            </div>
           </>
         )}
 
@@ -397,13 +338,6 @@ export default function EditProject() {
           <button type="button" onClick={() => navigate(-1)} className="btn-secondary btn-lg" style={{ flex:1 }}>Cancelar</button>
         </div>
       </form>
-
-      {showConfirm && (
-        <ConfirmEnviarModal
-          onConfirm={() => { setEnviarAlAdmin(true); setShowConfirm(false) }}
-          onCancel={() => setShowConfirm(false)}
-        />
-      )}
     </div>
   )
 }
