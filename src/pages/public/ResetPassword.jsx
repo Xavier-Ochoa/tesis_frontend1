@@ -25,14 +25,14 @@ export default function ResetPassword() {
   // ── Paso 1: verificar que el token no esté vacío y pasar al paso 2 ──
   const handleNextStep = async e => {
     e.preventDefault()
-    if (!token.trim()) { setTokenError('Ingresa el token de tu correo'); return }
+    if (!token.trim()) { setTokenError('Ingresa el código de restablecimiento de tu correo'); return }
     setTokenError('')
     setLoading(true)
     try {
       await api.get(`/auth/recuperarpassword/${token.trim()}`)
       setStep(2)
     } catch (err) {
-      setTokenError(err.response?.data?.msg || 'Token inválido o expirado')
+      setTokenError(err.response?.data?.msg || 'Código inválido o expirado')
     } finally {
       setLoading(false)
     }
@@ -69,7 +69,7 @@ export default function ResetPassword() {
         err.response?.status === 404 ||
         (msg.toLowerCase().includes('token') && !msg.toLowerCase().includes('contrase'))
       if (esErrorToken) {
-        setTokenError(msg || 'Token inválido o expirado')
+        setTokenError(msg || 'Código inválido o expirado')
         setStep(1)
         setToken('')
       } else {
@@ -129,11 +129,11 @@ export default function ResetPassword() {
           <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
             <div style={{ fontSize: 44, marginBottom: 12 }}>{step === 1 ? '📧' : '🔐'}</div>
             <h1 style={{ fontFamily: 'Syne, sans-serif', fontSize: 22, fontWeight: 800, color: 'var(--text-1)', margin: '0 0 6px', letterSpacing: '-0.03em' }}>
-              {step === 1 ? 'Ingresa tu token' : 'Nueva contraseña'}
+              {step === 1 ? 'Ingresa tu código de restablecimiento' : 'Nueva contraseña'}
             </h1>
             <p style={{ fontSize: 13, color: 'var(--text-3)', margin: 0 }}>
               {step === 1
-                ? <>Revisa tu correo{emailRef ? <> (<strong style={{ color: 'var(--text-2)' }}>{emailRef}</strong>)</> : ''} y copia el token que recibiste.</>
+                ? <>Revisa tu correo{emailRef ? <> (<strong style={{ color: 'var(--text-2)' }}>{emailRef}</strong>)</> : ''} y copia el código de restablecimiento de contraseña que recibiste.</>
                 : 'Elige una contraseña segura para tu cuenta.'
               }
             </p>
@@ -156,7 +156,7 @@ export default function ResetPassword() {
                     {step > s ? '✓' : s}
                   </div>
                   <span style={{ fontSize: 10, color: step >= s ? 'var(--primary)' : 'var(--text-3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    {s === 1 ? 'Token' : 'Contraseña'}
+                    {s === 1 ? 'Código' : 'Contraseña'}
                   </span>
                 </div>
                 {i === 0 && (
@@ -171,18 +171,18 @@ export default function ResetPassword() {
             <form onSubmit={handleNextStep} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <ErrorBox msg={tokenError} />
               <div>
-                <label className="label">Token de recuperación</label>
+                <label className="label">Código de restablecimiento de contraseña</label>
                 <input
                   value={token}
                   onChange={e => { setToken(e.target.value); setTokenError('') }}
                   required
                   className="input"
                   style={{ fontFamily: 'JetBrains Mono, monospace', textAlign: 'center', letterSpacing: '0.08em', fontSize: 15, ...(tokenError ? { borderColor: 'rgba(239,68,68,0.5)' } : {}) }}
-                  placeholder="Pega tu token aquí"
+                  placeholder="Pega tu código aquí"
                   autoFocus
                 />
                 <p style={{ fontSize: 11, color: 'var(--text-3)', margin: '5px 0 0 2px' }}>
-                  El token se envió a tu correo institucional. Puede tardar unos segundos en llegar.
+                  El código de restablecimiento se envió a tu correo institucional. Puede tardar unos segundos en llegar.
                 </p>
               </div>
               <button type="submit" disabled={loading} className="btn-primary btn-lg" style={{ width: '100%' }}>
@@ -193,7 +193,7 @@ export default function ResetPassword() {
                       </svg>
                       Verificando...
                     </span>
-                  : 'Verificar token →'
+                  : 'Verificar código →'
                 }
               </button>
             </form>
