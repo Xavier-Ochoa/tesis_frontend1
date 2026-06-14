@@ -91,7 +91,7 @@ export default function App() {
           <div>
             <h5 style={{ fontFamily:'Syne, sans-serif', fontSize:13, fontWeight:700, color:'var(--text-1)', marginBottom:14, textTransform:'uppercase', letterSpacing:'0.08em' }}>Plataforma</h5>
             <ul style={{ listStyle:'none', padding:0, margin:0, display:'flex', flexDirection:'column', gap:10 }}>
-              {[['/', 'Inicio'], ['/proyectos', 'Proyectos'], ['/registro', 'Registro'], ['/login', 'Iniciar sesión']].map(([href, label]) => (
+              {[['/#top', '🏠 Inicio'], ['/#explorar', '📁 Proyectos'], ['/registro', '📝 Registro'], ['/login', '🔑 Iniciar sesión']].map(([href, label]) => (
                 <li key={href}><a href={href} style={{ fontSize:13, color:'var(--text-3)', textDecoration:'none' }}>{label}</a></li>
               ))}
             </ul>
@@ -103,12 +103,12 @@ export default function App() {
             <ul style={{ listStyle:'none', padding:0, margin:0, display:'flex', flexDirection:'column', gap:10 }}>
               <li>
                 <a href="mailto:luis.ochoa02@epn.edu.ec" style={{ fontSize:13, color:'var(--text-3)', textDecoration:'none', display:'flex', alignItems:'center', gap:7 }}>
-                  ✉️ luis.ochoa02@epn.edu.ec
+                  📧 luis.ochoa02@epn.edu.ec
                 </a>
               </li>
               <li>
                 <a href="https://wa.me/593984986049" target="_blank" rel="noopener noreferrer" style={{ fontSize:13, color:'var(--text-3)', textDecoration:'none', display:'flex', alignItems:'center', gap:7 }}>
-                  💬 WhatsApp (+593) 984 986 049
+                  📱 WhatsApp (+593) 984 986 049
                 </a>
               </li>
             </ul>
