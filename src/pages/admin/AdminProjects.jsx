@@ -289,7 +289,7 @@ export default function AdminProjects() {
                         {inactivo && <span className="badge badge-red" style={{ fontSize:10 }}>● Inactivo</span>}
                       </div>
                       <p style={{ fontSize:12, color:'var(--text-3)', margin:'0 0 3px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                        {p.autor?.nombre} {p.autor?.apellido} · {p.carrera}
+                        {p.autor?.nombre} {p.autor?.apellido} · {p.autor?.carrera}
                       </p>
                       <div style={{ display:'flex', gap:10, fontSize:12, color:'var(--text-3)' }}>
                         <span>❤️ {p.likes?.length||0}</span>
