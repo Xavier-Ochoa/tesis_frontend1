@@ -107,7 +107,9 @@ function ProfileTab({ user, updateUser }) {
       toast.success('Perfil actualizado correctamente')
       setEditing(false)
     } catch (err) {
-      toast.error(err.response?.data?.msg || 'Error al actualizar')
+      const data = err.response?.data
+      if (data?.errores?.length) data.errores.forEach(e => toast.error(e.mensaje))
+      else toast.error(data?.msg || 'Error al actualizar')
     } finally { setLoading(false) }
   }
 
