@@ -459,12 +459,12 @@ export default function ProjectDetail() {
             )
           })()}
 
-          {/* Tags */}
-          {project.tags?.length > 0 && (
+          {/* Palabras Clave */}
+          {project.palabrasClave?.length > 0 && (
             <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:14, padding:'16px' }}>
-              <h3 style={{ fontFamily:'Syne, sans-serif', fontSize:13, fontWeight:700, color:'var(--text-2)', margin:'0 0 10px', textTransform:'uppercase', letterSpacing:'0.08em' }}>Tags</h3>
+              <h3 style={{ fontFamily:'Syne, sans-serif', fontSize:13, fontWeight:700, color:'var(--text-2)', margin:'0 0 10px', textTransform:'uppercase', letterSpacing:'0.08em' }}>Palabras Clave</h3>
               <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
-                {project.tags.map((t, i) => <span key={i} className="badge badge-gray">{t}</span>)}
+                {project.palabrasClave.map((t, i) => <span key={i} className="badge badge-gray">{t}</span>)}
               </div>
             </div>
           )}
