@@ -88,7 +88,7 @@ export default function EditProject() {
           tecnologias:        Array.isArray(p.tecnologias) ? p.tecnologias.join(', ') : '',
           repositorio:        p.repositorio || '',
           enlaceDemo:         p.enlaceDemo  || '',
-          tags:               Array.isArray(p.tags) ? p.tags.join(', ') : '',
+          palabrasClave:      Array.isArray(p.palabrasClave) ? p.palabrasClave.join(', ') : '',
           lineaInvestigacion: p.lineaInvestigacion || p.asignatura || '',
           fechaInicio:        p.fechaInicio ? p.fechaInicio.slice(0, 10) : '',
           fechaFin:           p.fechaFin    ? p.fechaFin.slice(0, 10)    : '',
@@ -140,7 +140,7 @@ export default function EditProject() {
     try {
       const fd = new FormData()
       if (rol === 'colaborador') {
-        const camposColab = ['descripcion', 'tecnologias', 'repositorio', 'enlaceDemo', 'tags', 'lineaInvestigacion']
+        const camposColab = ['descripcion', 'tecnologias', 'repositorio', 'enlaceDemo', 'palabrasClave', 'lineaInvestigacion']
         camposColab.forEach(k => { if (form[k] !== '') fd.append(k, form[k]) })
         newImages.forEach(img => fd.append('imagenes', img))
         if (nuevoDoc) fd.append('documento', nuevoDoc)
@@ -386,8 +386,8 @@ export default function EditProject() {
               </div>
             </div>
             <div>
-              <label className="label" style={{ display:'flex', alignItems:'center' }}>Tags <FieldHint text="Palabras clave separadas por coma." /></label>
-              <input name="tags" value={form.tags} onChange={handle} className="input" placeholder="iot, python, redes" />
+              <label className="label" style={{ display:'flex', alignItems:'center' }}>Palabras Clave <FieldHint text="Palabras clave separadas por coma." /></label>
+              <input name="palabrasClave" value={form.palabrasClave} onChange={handle} className="input" placeholder="iot, python, redes" />
             </div>
           </div>
         </div>
