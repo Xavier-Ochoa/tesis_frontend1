@@ -40,7 +40,7 @@ export default function CreateVersion() {
           tecnologias:        Array.isArray(p.tecnologias) ? p.tecnologias.join(', ') : '',
           repositorio:        p.repositorio        || '',
           enlaceDemo:         p.enlaceDemo         || '',
-          tags:               Array.isArray(p.tags) ? p.tags.join(', ') : '',
+          palabrasClave:      Array.isArray(p.palabrasClave) ? p.palabrasClave.join(', ') : '',
           fechaInicio:        p.fechaInicio ? p.fechaInicio.slice(0, 10) : '',
           fechaFin:           p.fechaFin    ? p.fechaFin.slice(0, 10)    : '',
         })
@@ -251,8 +251,8 @@ export default function CreateVersion() {
           </div>
         </div>
         <div>
-          <label className="label" style={{ display:'flex', alignItems:'center' }}>Tags <FieldHint text="Palabras clave separadas por coma." /></label>
-          <input name="tags" value={form.tags} onChange={handle} className="input" placeholder="iot, python, redes" />
+          <label className="label" style={{ display:'flex', alignItems:'center' }}>Palabras Clave <FieldHint text="Palabras clave separadas por coma." /></label>
+          <input name="palabrasClave" value={form.palabrasClave} onChange={handle} className="input" placeholder="iot, python, redes" />
         </div>
 
         {/* Toggle: enviar o no al admin */}
