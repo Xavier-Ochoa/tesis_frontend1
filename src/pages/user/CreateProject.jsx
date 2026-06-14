@@ -8,7 +8,7 @@ const MAX_IMAGENES = 5
 const defaultForm = {
   titulo:'', descripcion:'', categoria:'academico', fechaInicio:'',
   fechaFin:'', tecnologias:'', repositorio:'', enlaceDemo:'',
-  lineaInvestigacion:'', tags:'',
+  lineaInvestigacion:'', palabrasClave:'',
 }
 
 // ── Modal IA ──────────────────────────────────────────────────────────────────
@@ -312,10 +312,10 @@ export default function CreateProject() {
           </div>
         </div>
 
-        {/* Tags */}
+        {/* Palabras Clave */}
         <div>
-          <label className="label" style={{ display:'flex', alignItems:'center' }}>Tags <FieldHint text="Palabras clave separadas por coma." /></label>
-          <input name="tags" value={form.tags} onChange={handle} className="input" placeholder="iot, python, redes" />
+          <label className="label" style={{ display:'flex', alignItems:'center' }}>Palabras Clave <FieldHint text="Palabras clave separadas por coma." /></label>
+          <input name="palabrasClave" value={form.palabrasClave} onChange={handle} className="input" placeholder="iot, python, redes" />
         </div>
 
         {/* ── Enviar al Admin ── */}
