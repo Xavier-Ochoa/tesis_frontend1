@@ -15,14 +15,14 @@ export default function ConfirmEmail() {
 
   const submit = async e => {
     e.preventDefault()
-    if (!token.trim()) { toast.error('Ingresa el token'); return }
+    if (!token.trim()) { toast.error('Ingresa el código de activación'); return }
     setLoading(true)
     try {
       await api.get(`/auth/confirm/${token.trim()}`)
       setDone(true)
       toast.success('¡Correo confirmado!')
     } catch (err) {
-      toast.error(err.response?.data?.msg || 'Token inválido o ya usado')
+      toast.error(err.response?.data?.msg || 'Código de activación inválido o ya usado')
     } finally { setLoading(false) }
   }
 
@@ -32,11 +32,11 @@ export default function ConfirmEmail() {
     setResending(true)
     try {
       await api.post('/auth/reenviar-confirmacion', { email: resendEmail.trim() })
-      toast.success('Token reenviado. Revisa tu correo institucional.')
+      toast.success('Código de activación reenviado. Revisa tu correo institucional.')
       setShowResend(false)
       setResendEmail('')
     } catch (err) {
-      toast.error(err.response?.data?.msg || 'No se pudo reenviar el token')
+      toast.error(err.response?.data?.msg || 'No se pudo reenviar el código de activación')
     } finally { setResending(false) }
   }
 
@@ -50,7 +50,7 @@ export default function ConfirmEmail() {
             Confirmar correo
           </h1>
           <p style={{ fontSize: 14, color: 'var(--text-3)', margin: '0 0 1.5rem', lineHeight: 1.6 }}>
-            Revisa tu correo institucional y copia el token de verificación que te enviamos.
+            Revisa tu correo institucional y copia el código de activación que te enviamos.
           </p>
 
           {done ? (
@@ -70,7 +70,7 @@ export default function ConfirmEmail() {
                   onChange={e => setToken(e.target.value)}
                   className="input"
                   style={{ textAlign: 'center', fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.1em', fontSize: 15 }}
-                  placeholder="Pega tu token aquí"
+                  placeholder="Pega tu código de activación aquí"
                 />
                 <button type="submit" disabled={loading} className="btn-primary btn-lg" style={{ width: '100%' }}>
                   {loading ? 'Verificando...' : 'Confirmar cuenta'}
@@ -91,7 +91,7 @@ export default function ConfirmEmail() {
                   className="btn-secondary"
                   style={{ width: '100%' }}
                 >
-                  Reenviar token de confirmación
+                  Reenviar código de activación
                 </button>
               ) : (
                 <div style={{
