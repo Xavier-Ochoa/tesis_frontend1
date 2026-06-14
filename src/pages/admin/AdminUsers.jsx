@@ -25,7 +25,9 @@ function CambiarRolModal({ user, onClose, onSuccess }) {
       onSuccess()
       onClose()
     } catch (err) {
-      toast.error(err.response?.data?.msg || 'Error al cambiar el rol')
+      const data = err.response?.data
+      if (data?.errores?.length) data.errores.forEach(e => toast.error(e.mensaje))
+      else toast.error(data?.msg || 'Error al cambiar el rol')
     } finally { setLoading(false) }
   }
 
@@ -135,7 +137,9 @@ export default function AdminUsers() {
       toast.success(`Usuario ${nuevoEstado === 'inactivo' ? 'suspendido' : 'activado'} correctamente`)
       fetchUsers()
     } catch (err) {
-      toast.error(err.response?.data?.msg || `Error al ${accion} el usuario`)
+      const data = err.response?.data
+      if (data?.errores?.length) data.errores.forEach(e => toast.error(e.mensaje))
+      else toast.error(data?.msg || `Error al ${accion} el usuario`)
     }
   }
 
