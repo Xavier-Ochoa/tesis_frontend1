@@ -71,8 +71,67 @@ export default function App() {
           } />
         </Routes>
       </main>
-      <footer style={{ borderTop:'1px solid var(--border)', padding:'1rem 1.5rem', textAlign:'center', fontSize:12, color:'var(--text-3)', background:'var(--surface)' }}>
-        POLIESFOT — Escuela Politécnica Nacional © {new Date().getFullYear()}
+      <footer style={{ borderTop:'1px solid var(--border)', background:'var(--surface)', paddingTop:'2.5rem' }}>
+        <div style={{ maxWidth:'80rem', margin:'0 auto', padding:'0 1.5rem 2.5rem', display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(200px, 1fr))', gap:'2rem' }}>
+
+          {/* Marca */}
+          <div style={{ gridColumn: 'span 1' }}>
+            <div style={{ fontFamily:'Syne, sans-serif', fontSize:18, fontWeight:800, color:'var(--primary)', marginBottom:8 }}>
+              PoliExpo
+            </div>
+            <p style={{ fontSize:13, color:'var(--text-3)', lineHeight:1.7, margin:'0 0 12px' }}>
+              Plataforma Institucional de Proyectos Académicos de la ESFOT — Escuela Politécnica Nacional.
+            </p>
+            <p style={{ fontSize:11, fontWeight:600, color:'var(--text-3)', letterSpacing:'0.06em', textTransform:'uppercase', margin:0 }}>
+              Universidad / ESFOT
+            </p>
+          </div>
+
+          {/* Plataforma */}
+          <div>
+            <h5 style={{ fontFamily:'Syne, sans-serif', fontSize:13, fontWeight:700, color:'var(--text-1)', marginBottom:14, textTransform:'uppercase', letterSpacing:'0.08em' }}>Plataforma</h5>
+            <ul style={{ listStyle:'none', padding:0, margin:0, display:'flex', flexDirection:'column', gap:10 }}>
+              {[['/', 'Inicio'], ['/proyectos', 'Proyectos'], ['/registro', 'Registro'], ['/login', 'Iniciar sesión']].map(([href, label]) => (
+                <li key={href}><a href={href} style={{ fontSize:13, color:'var(--text-3)', textDecoration:'none' }}>{label}</a></li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Contacto */}
+          <div>
+            <h5 style={{ fontFamily:'Syne, sans-serif', fontSize:13, fontWeight:700, color:'var(--text-1)', marginBottom:14, textTransform:'uppercase', letterSpacing:'0.08em' }}>Contacto</h5>
+            <ul style={{ listStyle:'none', padding:0, margin:0, display:'flex', flexDirection:'column', gap:10 }}>
+              <li>
+                <a href="mailto:luis.ochoa02@epn.edu.ec" style={{ fontSize:13, color:'var(--text-3)', textDecoration:'none', display:'flex', alignItems:'center', gap:7 }}>
+                  ✉️ luis.ochoa02@epn.edu.ec
+                </a>
+              </li>
+              <li>
+                <a href="https://wa.me/593984986049" target="_blank" rel="noopener noreferrer" style={{ fontSize:13, color:'var(--text-3)', textDecoration:'none', display:'flex', alignItems:'center', gap:7 }}>
+                  💬 WhatsApp (+593) 984 986 049
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Legal */}
+          <div>
+            <h5 style={{ fontFamily:'Syne, sans-serif', fontSize:13, fontWeight:700, color:'var(--text-1)', marginBottom:14, textTransform:'uppercase', letterSpacing:'0.08em' }}>Legal</h5>
+            <ul style={{ listStyle:'none', padding:0, margin:0, display:'flex', flexDirection:'column', gap:10 }}>
+              {['Privacidad', 'Términos de uso', 'Ayuda'].map(l => (
+                <li key={l}><span style={{ fontSize:13, color:'var(--text-3)' }}>{l}</span></li>
+              ))}
+            </ul>
+          </div>
+
+        </div>
+
+        {/* Bottom bar */}
+        <div style={{ borderTop:'1px solid var(--border)', padding:'1rem 1.5rem', textAlign:'center' }}>
+          <p style={{ fontSize:12, color:'var(--text-3)', margin:0 }}>
+            © {new Date().getFullYear()} PoliExpo · Escuela Politécnica Nacional · Todos los derechos reservados.
+          </p>
+        </div>
       </footer>
       {/* Widget de chat flotante — usuarios no-admin */}
       {user && !esAdmin && <Chat />}
