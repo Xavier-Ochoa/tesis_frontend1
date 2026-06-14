@@ -13,7 +13,7 @@ export default function ForgotPassword() {
     setLoading(true)
     try {
       await api.post('/auth/recuperarpassword', { email })
-      toast.success('Token enviado a tu correo')
+      toast.success('Código de restablecimiento enviado a tu correo')
       // Redirigir a la página de reset pasando el correo como state (referencia)
       navigate('/nuevo-password', { state: { email } })
     } catch (err) {
@@ -31,7 +31,7 @@ export default function ForgotPassword() {
             Recuperar contraseña
           </h1>
           <p style={{ fontSize: 14, color: 'var(--text-3)', margin: '0 0 1.5rem' }}>
-            Ingresa tu correo institucional y te enviaremos un token de recuperación.
+            Ingresa tu correo institucional y te enviaremos un código de restablecimiento de contraseña.
           </p>
 
           <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -52,7 +52,7 @@ export default function ForgotPassword() {
                     </svg>
                     Enviando...
                   </span>
-                : 'Enviar token →'
+                : 'Enviar código →'
               }
             </button>
           </form>
