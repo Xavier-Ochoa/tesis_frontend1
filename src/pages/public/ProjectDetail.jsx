@@ -105,6 +105,7 @@ export default function ProjectDetail() {
   const [showHistorial, setShowHistorial] = useState(false)
   const [showPublicarModal, setShowPublicarModal] = useState(false)
   const [publicando, setPublicando]   = useState(false)
+  const [enviandoRevision, setEnviandoRevision] = useState(false)
   const [descargandoPdf, setDescargandoPdf] = useState(false)
 
   const abrirPDF = async (descargar = false) => {
@@ -181,8 +182,7 @@ export default function ProjectDetail() {
     catch { toast.error('Error') }
   }
 
-  const handlePublicar = async () => {
-    setPublicando(true)
+  const handlePublicar = async () => {    setPublicando(true)
     try {
       await api.put(`/proyectos/${id}/publicar`)
       toast.success('¡Proyecto publicado! Ahora es visible en la página principal.')
@@ -191,6 +191,19 @@ export default function ProjectDetail() {
     } catch (err) {
       toast.error(err.response?.data?.message || 'Error al publicar')
     } finally { setPublicando(false) }
+  }
+
+  const [showEnviarModal, setShowEnviarModal] = useState(false)
+
+  const handleEnviarRevision = async () => {
+    setEnviandoRevision(true)
+    try {
+      await api.put(`/proyectos/${id}`, { enviarAlAdmin: true })
+      toast.success('Proyecto enviado al administrador para revisión.')
+      fetchProject()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error al enviar al administrador')
+    } finally { setEnviandoRevision(false) }
   }
 
   if (loading) return <Spinner />
@@ -337,6 +350,18 @@ export default function ProjectDetail() {
               <Link to={`/mis-proyectos/${id}/nueva-version`} className="btn-secondary btn-sm">
                 🔖 Nueva versión
               </Link>
+            )}
+
+            {/* Botón Enviar a revisión */}
+            {isAuthor && !enviarAlAdmin && (
+              <button
+                onClick={() => setShowEnviarModal(true)}
+                disabled={enviandoRevision}
+                className="btn-secondary btn-sm"
+                title="Enviar al administrador para revisión"
+              >
+                📤 Enviar a revisión
+              </button>
             )}
 
             {/* Botón Publicar */}
@@ -502,6 +527,25 @@ export default function ProjectDetail() {
           })()}
         </div>
       </div>
+
+      {showEnviarModal && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', zIndex:50, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
+          <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:20, padding:'1.75rem', width:'100%', maxWidth:420, boxShadow:'var(--shadow-lg)', animation:'slideUp 0.2s ease-out' }}>
+            <div style={{ fontSize:36, textAlign:'center', marginBottom:12 }}>📤</div>
+            <h2 style={{ fontFamily:'Syne,sans-serif', fontSize:18, fontWeight:800, color:'var(--text-1)', textAlign:'center', margin:'0 0 10px' }}>¿Enviar a revisión?</h2>
+            <p style={{ fontSize:13, color:'var(--text-2)', lineHeight:1.65, margin:'0 0 16px', textAlign:'center' }}>
+              El proyecto será enviado al administrador para que pueda revisarlo, aprobarlo o rechazarlo.<br/><br/>
+              <strong>Esta acción no se puede deshacer.</strong> Una vez enviado, el proyecto no podrá volver a ser privado.
+            </p>
+            <div style={{ display:'flex', gap:10 }}>
+              <button onClick={async () => { setShowEnviarModal(false); await handleEnviarRevision() }} disabled={enviandoRevision} className="btn-primary" style={{ flex:1 }}>
+                {enviandoRevision ? 'Enviando...' : 'Sí, enviar al admin'}
+              </button>
+              <button onClick={() => setShowEnviarModal(false)} className="btn-secondary" style={{ flex:1 }}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showPublicarModal && (
         <PublicarModal
