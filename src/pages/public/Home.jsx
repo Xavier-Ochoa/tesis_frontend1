@@ -106,7 +106,7 @@ export default function Home() {
   const hasFilters = carrera || categoria || search
 
   return (
-    <div style={{ minHeight: 'calc(100vh - 56px)', background: 'var(--bg)' }}>
+    <div id="top" style={{ minHeight: 'calc(100vh - 56px)', background: 'var(--bg)' }}>
 
       {/* ── HERO ─────────────────────────────────────────── */}
       <section style={{
