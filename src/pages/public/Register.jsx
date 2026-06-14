@@ -48,7 +48,7 @@ export default function Register() {
       const payload = { ...form }
       if (payload.semestre) payload.semestre = Number(payload.semestre)
       else delete payload.semestre
-      if (!payload.carrera) delete payload.carrera
+      // carrera es obligatoria, se envía siempre
       await api.post('/auth/registro', payload)
       toast.success('Registro exitoso. Revisa tu correo para el token.')
       navigate('/confirmar-email')
@@ -115,9 +115,9 @@ export default function Register() {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: form.rol === 'estudiante' ? '1fr 1fr' : '1fr', gap: 12 }}>
               <div>
-                <label className="label" style={{ display: 'flex', alignItems: 'center' }}>Carrera <FieldHint text="Selecciona tu carrera." /></label>
-                <select name="carrera" value={form.carrera} onChange={handle} className="input">
-                  <option value="">-- Selecciona una carrera --</option>
+                <label className="label" style={{ display: 'flex', alignItems: 'center' }}>Carrera <FieldHint required text="Selecciona tu carrera." /></label>
+                <select name="carrera" required value={form.carrera} onChange={handle} className="input">
+                  <option value="" disabled>-- Selecciona una carrera --</option>
                   {['Agua y Saneamiento Ambiental','Desarrollo de Software','Electromecánica','Redes y Telecomunicaciones','Procesamiento de Alimentos','Procesamiento Industrial de la Madera'].map(c => (
                     <option key={c} value={c}>{c}</option>
                   ))}
