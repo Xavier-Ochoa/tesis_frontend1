@@ -84,7 +84,6 @@ export default function EditProject() {
         setForm({
           titulo:             p.titulo || '',
           categoria:          p.categoria || 'academico',
-          carrera:            p.carrera || '',
           descripcion:        p.descripcion || '',
           tecnologias:        Array.isArray(p.tecnologias) ? p.tecnologias.join(', ') : '',
           repositorio:        p.repositorio || '',
@@ -311,13 +310,6 @@ export default function EditProject() {
                 <select name="categoria" value={form.categoria} onChange={handle} className="input">
                   <option value="academico">Académico</option>
                   <option value="extracurricular">Extracurricular</option>
-                </select>
-              </div>
-              <div>
-                <label className="label" style={{ display:'flex', alignItems:'center' }}>Carrera <FieldHint required /></label>
-                <select name="carrera" required value={form.carrera} onChange={handle} className="input">
-                  <option value="">Selecciona una carrera</option>
-                  {CARRERAS.map(c => <option key={c}>{c}</option>)}
                 </select>
               </div>
             </div>
