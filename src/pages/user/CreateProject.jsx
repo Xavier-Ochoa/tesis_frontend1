@@ -7,7 +7,7 @@ import FieldHint from '../../components/FieldHint'
 const MAX_IMAGENES = 5
 const defaultForm = {
   titulo:'', descripcion:'', categoria:'academico', fechaInicio:'',
-  fechaFin:'', carrera:'', tecnologias:'', repositorio:'', enlaceDemo:'',
+  fechaFin:'', tecnologias:'', repositorio:'', enlaceDemo:'',
   lineaInvestigacion:'', tags:'',
 }
 
@@ -272,18 +272,6 @@ export default function CreateProject() {
             <select name="categoria" value={form.categoria} onChange={handle} className="input">
               <option value="academico">Académico</option>
               <option value="extracurricular">Extracurricular</option>
-            </select>
-          </div>
-          <div>
-            <label className="label" style={{ display:'flex', alignItems:'center' }}>Carrera <FieldHint required text="Selecciona la carrera del proyecto." /></label>
-            <select name="carrera" required value={form.carrera} onChange={handle} className="input">
-              <option value="">Selecciona una carrera</option>
-              <option>Agua y Saneamiento Ambiental</option>
-              <option>Desarrollo de Software</option>
-              <option>Electromecánica</option>
-              <option>Redes y Telecomunicaciones</option>
-              <option>Procesamiento de Alimentos</option>
-              <option>Procesamiento Industrial de la Madera</option>
             </select>
           </div>
         </div>
