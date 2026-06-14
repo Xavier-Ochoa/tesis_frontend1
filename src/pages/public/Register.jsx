@@ -125,8 +125,8 @@ export default function Register() {
               </div>
               {form.rol === 'estudiante' && (
                 <div>
-                  <label className="label" style={{ display: 'flex', alignItems: 'center' }}>Semestre <FieldHint text="Número del 0 al 5." /></label>
-                  <input name="semestre" type="number" min={0} max={5} value={form.semestre} onChange={handle} className="input" placeholder="0 - 5" />
+                  <label className="label" style={{ display: 'flex', alignItems: 'center' }}>Semestre <FieldHint text="Número del 1 al 5." /></label>
+                  <input name="semestre" type="number" min={1} max={5} value={form.semestre} onChange={handle} className="input" placeholder="1 - 5" />
                 </div>
               )}
             </div>
