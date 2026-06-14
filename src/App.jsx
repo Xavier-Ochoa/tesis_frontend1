@@ -91,7 +91,7 @@ export default function App() {
           <div>
             <h5 style={{ fontFamily:'Syne, sans-serif', fontSize:13, fontWeight:700, color:'var(--text-1)', marginBottom:14, textTransform:'uppercase', letterSpacing:'0.08em' }}>Plataforma</h5>
             <ul style={{ listStyle:'none', padding:0, margin:0, display:'flex', flexDirection:'column', gap:10 }}>
-              {[['/#top', '🏠 Inicio'], ['/#explorar', '📁 Proyectos'], ['/registro', '📝 Registro'], ['/login', '🔑 Iniciar sesión']].map(([href, label]) => (
+              {[['/#top', 'Inicio'], ['/#explorar', 'Proyectos'], ['/registro', 'Registro'], ['/login', 'Iniciar sesión']].map(([href, label]) => (
                 <li key={href}><a href={href} style={{ fontSize:13, color:'var(--text-3)', textDecoration:'none' }}>{label}</a></li>
               ))}
             </ul>
@@ -100,15 +100,26 @@ export default function App() {
           {/* Contacto */}
           <div>
             <h5 style={{ fontFamily:'Syne, sans-serif', fontSize:13, fontWeight:700, color:'var(--text-1)', marginBottom:14, textTransform:'uppercase', letterSpacing:'0.08em' }}>Contacto</h5>
-            <ul style={{ listStyle:'none', padding:0, margin:0, display:'flex', flexDirection:'column', gap:10 }}>
+            <ul style={{ listStyle:'none', padding:0, margin:0, display:'flex', flexDirection:'column', gap:12 }}>
               <li>
-                <a href="mailto:luis.ochoa02@epn.edu.ec" style={{ fontSize:13, color:'var(--text-3)', textDecoration:'none', display:'flex', alignItems:'center', gap:7 }}>
-                  📧 luis.ochoa02@epn.edu.ec
+                <a href="mailto:luis.ochoa02@epn.edu.ec" style={{ fontSize:13, color:'var(--text-3)', textDecoration:'none', display:'flex', alignItems:'center', gap:9 }}>
+                  {/* Email SVG */}
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink:0 }}>
+                    <rect width="24" height="24" rx="4" fill="#EA4335"/>
+                    <path d="M4 7.5L12 13L20 7.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <rect x="4" y="7" width="16" height="11" rx="1.5" stroke="white" strokeWidth="1.5" fill="none"/>
+                  </svg>
+                  luis.ochoa02@epn.edu.ec
                 </a>
               </li>
               <li>
-                <a href="https://wa.me/593984986049" target="_blank" rel="noopener noreferrer" style={{ fontSize:13, color:'var(--text-3)', textDecoration:'none', display:'flex', alignItems:'center', gap:7 }}>
-                  📱 WhatsApp (+593) 984 986 049
+                <a href="https://wa.me/593984986049" target="_blank" rel="noopener noreferrer" style={{ fontSize:13, color:'var(--text-3)', textDecoration:'none', display:'flex', alignItems:'center', gap:9 }}>
+                  {/* WhatsApp SVG oficial */}
+                  <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink:0 }}>
+                    <rect width="24" height="24" rx="4" fill="#25D366"/>
+                    <path d="M12 4C7.582 4 4 7.582 4 12c0 1.49.39 2.888 1.07 4.1L4 20l4.02-1.05A7.953 7.953 0 0012 20c4.418 0 8-3.582 8-8s-3.582-8-8-8zm3.93 11.07c-.17.48-.98.92-1.36.97-.35.05-.79.07-1.27-.08-.29-.09-.67-.22-1.15-.43-2.02-.87-3.34-2.91-3.44-3.04-.1-.14-.82-1.09-.82-2.08 0-.99.52-1.48.7-1.68.18-.2.4-.25.53-.25h.38c.12 0 .29-.05.45.34.17.4.57 1.39.62 1.49.05.1.08.22.02.35-.06.13-.1.21-.19.32-.1.11-.2.25-.29.34-.1.1-.2.2-.09.4.11.2.5.82 1.07 1.33.74.65 1.36.85 1.55.95.2.1.31.08.43-.05.12-.13.5-.58.63-.78.13-.2.27-.17.45-.1.18.07 1.15.54 1.35.64.2.1.33.15.38.23.05.09.05.52-.12 1z" fill="white"/>
+                  </svg>
+                  (+593) 984 986 049
                 </a>
               </li>
             </ul>
