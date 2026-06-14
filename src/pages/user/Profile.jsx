@@ -247,7 +247,7 @@ function ProfileTab({ user, updateUser }) {
                 <option value="">-- Selecciona una carrera --</option>
                 {['Agua y Saneamiento Ambiental','Desarrollo de Software','Electromecánica',
                   'Redes y Telecomunicaciones','Procesamiento de Alimentos',
-                  'Procesamiento industrial de la madera'].map(c => (
+                  'Procesamiento Industrial de la Madera'].map(c => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
