@@ -61,6 +61,23 @@ export default function MyProjects() {
 
   useEffect(() => { fetchProjects() }, [filtroEstado, filtroEnviar])
 
+  const handlePublicar = (p) => {
+    setConfirmModal({
+      title: '🌐 ¿Publicar este proyecto?',
+      message: 'Al publicar, el proyecto aparecerá en la página principal y será visible para todos. Esta acción no se puede deshacer: una vez publicado, no podrás despublicarlo.',
+      confirmLabel: '🌐 Publicar ahora',
+      danger: false,
+      onConfirm: async () => {
+        try {
+          await api.put(`/proyectos/${p._id}/publicar`)
+          toast.success('¡Proyecto publicado! Ahora es visible en la página principal.')
+          fetchProjects()
+        } catch (err) { toast.error(err.response?.data?.message || 'No se pudo publicar') }
+        setConfirmModal(null)
+      }
+    })
+  }
+
   const handleDelete = (p) => {
     setConfirmModal({
       title: '⚠️ ¿Eliminar proyecto permanentemente?',
@@ -243,9 +260,9 @@ export default function MyProjects() {
                       )}
 
                       {canPub && (
-                        <Link to={`/proyectos/${p._id}`} className="btn-primary btn-sm" title="Publicar en la landing page">
+                        <button onClick={() => handlePublicar(p)} className="btn-primary btn-sm" title="Publicar en la landing page">
                           🌐 Publicar
-                        </Link>
+                        </button>
                       )}
 
                       {user?.rol === 'docente' && (
