@@ -254,8 +254,8 @@ export default function CreateProject() {
             <input name="fechaInicio" type="date" required value={form.fechaInicio} onChange={handle} className="input" />
           </div>
           <div>
-            <label className="label" style={{ display:'flex', alignItems:'center' }}>Fecha fin <FieldHint text="Opcional." /></label>
-            <input name="fechaFin" type="date" value={form.fechaFin} onChange={handle} className="input" />
+            <label className="label" style={{ display:'flex', alignItems:'center' }}>Fecha fin <FieldHint required text="Fecha de finalización del proyecto." /></label>
+            <input name="fechaFin" type="date" required value={form.fechaFin} onChange={handle} className="input" />
           </div>
         </div>
 
