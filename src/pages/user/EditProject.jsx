@@ -41,6 +41,10 @@ export default function EditProject() {
   const [saving, setSaving]               = useState(false)
   const [deletingIdx, setDeletingIdx]     = useState(null)
   const [rol, setRol]                     = useState(null)
+  const [errors, setErrors]               = useState({})
+
+  const REQUIRED_FIELDS = ['titulo', 'descripcion', 'categoria', 'fechaInicio', 'fechaFin']
+  const FIELD_LABELS = { titulo:'Título', descripcion:'Descripción', categoria:'Categoría', fechaInicio:'Fecha inicio', fechaFin:'Fecha fin' }
 
   useEffect(() => {
     api.get(`/proyectos/${id}`)
@@ -75,6 +79,7 @@ export default function EditProject() {
   const handle = e => {
     const { name, value } = e.target
     setForm({ ...form, [name]: value })
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }))
   }
 
   const handleNewImages = e => {
@@ -106,7 +111,14 @@ export default function EditProject() {
   }
 
   const submit = async e => {
-    e.preventDefault(); setSaving(true)
+    e.preventDefault()
+    // Validación cliente — campos obligatorios solo aplican al autor
+    if (rol !== 'colaborador') {
+      const newErrors = {}
+      REQUIRED_FIELDS.forEach(f => { if (!form[f] || !form[f].trim()) newErrors[f] = `${FIELD_LABELS[f]} es obligatorio.` })
+      if (Object.keys(newErrors).length) { setErrors(newErrors); toast.error('Completa los campos requeridos.'); return }
+    }
+    setSaving(true)
     try {
       const fd = new FormData()
       if (rol === 'colaborador') {
@@ -271,25 +283,33 @@ export default function EditProject() {
           <>
             <div>
               <label className="label" style={{ display:'flex', alignItems:'center' }}>Título <FieldHint required text="Entre 5 y 200 caracteres." /></label>
-              <input name="titulo" required value={form.titulo} onChange={handle} className="input" />
+              <input name="titulo" required value={form.titulo} onChange={handle} className="input"
+                style={errors.titulo ? { borderColor:'var(--danger)' } : {}} />
+              {errors.titulo && <p style={{ fontSize:11, color:'var(--danger)', marginTop:3 }}>{errors.titulo}</p>}
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
               <div>
-                <label className="label">Categoría</label>
-                <select name="categoria" value={form.categoria} onChange={handle} className="input">
+                <label className="label" style={{ display:'flex', alignItems:'center' }}>Categoría <FieldHint required text="Académico o extracurricular." /></label>
+                <select name="categoria" required value={form.categoria} onChange={handle} className="input"
+                  style={errors.categoria ? { borderColor:'var(--danger)' } : {}}>
                   <option value="academico">Académico</option>
                   <option value="extracurricular">Extracurricular</option>
                 </select>
+                {errors.categoria && <p style={{ fontSize:11, color:'var(--danger)', marginTop:3 }}>{errors.categoria}</p>}
               </div>
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
               <div>
-                <label className="label">Fecha inicio</label>
-                <input name="fechaInicio" type="date" value={form.fechaInicio} onChange={handle} className="input" />
+                <label className="label" style={{ display:'flex', alignItems:'center' }}>Fecha inicio <FieldHint required text="Formato YYYY-MM-DD." /></label>
+                <input name="fechaInicio" type="date" required value={form.fechaInicio} onChange={handle} className="input"
+                  style={errors.fechaInicio ? { borderColor:'var(--danger)' } : {}} />
+                {errors.fechaInicio && <p style={{ fontSize:11, color:'var(--danger)', marginTop:3 }}>{errors.fechaInicio}</p>}
               </div>
               <div>
-                <label className="label">Fecha fin</label>
-                <input name="fechaFin" type="date" value={form.fechaFin} onChange={handle} className="input" />
+                <label className="label" style={{ display:'flex', alignItems:'center' }}>Fecha fin <FieldHint required text="Fecha de finalización del proyecto." /></label>
+                <input name="fechaFin" type="date" required value={form.fechaFin} onChange={handle} className="input"
+                  style={errors.fechaFin ? { borderColor:'var(--danger)' } : {}} />
+                {errors.fechaFin && <p style={{ fontSize:11, color:'var(--danger)', marginTop:3 }}>{errors.fechaFin}</p>}
               </div>
             </div>
             <div>
@@ -305,8 +325,10 @@ export default function EditProject() {
           <div style={{ display:'flex', flexDirection:'column', gap:'1rem' }}>
             <div>
               <label className="label" style={{ display:'flex', alignItems:'center' }}>Descripción <FieldHint required text="Entre 20 y 2000 caracteres." /></label>
-              <textarea name="descripcion" required value={form.descripcion} onChange={handle} rows={4} className="input" style={{ resize:'none' }} />
-              <p style={{ fontSize:11, color:'var(--text-3)', marginTop:3 }}>{form.descripcion.length}/2000</p>
+              <textarea name="descripcion" required value={form.descripcion} onChange={handle} rows={4} className="input" style={{ resize:'none', ...(errors.descripcion ? { borderColor:'var(--danger)' } : {}) }} />
+              <p style={{ fontSize:11, color: errors.descripcion ? 'var(--danger)' : 'var(--text-3)', marginTop:3 }}>
+                {errors.descripcion || `${form.descripcion.length}/2000`}
+              </p>
             </div>
             <div>
               <label className="label" style={{ display:'flex', alignItems:'center' }}>Tecnologías <FieldHint text="Separadas por coma." /></label>
