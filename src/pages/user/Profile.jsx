@@ -236,7 +236,7 @@ function ProfileTab({ user, updateUser }) {
               <label className="label" style={{ display: 'flex', alignItems: 'center' }}>
                 GitHub (usuario) <FieldHint text="Solo el usuario, sin URL." />
               </label>
-              <input name="github" value={form.github} onChange={handle} className="input" placeholder="mi-usuario" />
+              <input name="github" value={form.github} onChange={handle} className="input" placeholder="https://github.com/..." />
             </div>
           </div>
 
