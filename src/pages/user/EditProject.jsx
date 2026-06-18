@@ -7,10 +7,6 @@ import FieldHint from '../../components/FieldHint'
 import toast from 'react-hot-toast'
 
 const MAX_IMAGENES = 5
-const CARRERAS = [
-  'Agua y Saneamiento Ambiental','Desarrollo de Software','Electromecánica',
-  'Redes y Telecomunicaciones','Procesamiento de Alimentos','Procesamiento Industrial de la Madera',
-]
 
 export default function EditProject() {
   const { id }   = useParams()
