@@ -353,7 +353,7 @@ export default function ProjectDetail() {
             )}
 
             {/* Botón Enviar a revisión */}
-            {isAuthor && !enviarAlAdmin && (
+            {isAuthor && esUltima && !enviarAlAdmin && (
               <button
                 onClick={() => setShowEnviarModal(true)}
                 disabled={enviandoRevision}
