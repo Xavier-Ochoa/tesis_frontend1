@@ -16,9 +16,26 @@ export default function CreateVersion() {
   const [keepImages, setKeepImages]     = useState([])
   const [newImages, setNewImages]       = useState([])
   const [newPreviews, setNewPreviews]   = useState([])
-  const [documento, setDocumento]       = useState(null)
+  const [docActual, setDocActual]       = useState(null)   // PDF de la versión base
+  const [documento, setDocumento]       = useState(null)   // nuevo PDF a subir
+  const [viendoPdf, setViendoPdf]       = useState(false)
   const [loading, setLoading]           = useState(true)
   const [saving, setSaving]             = useState(false)
+
+  const verPDF = async () => {
+    setViendoPdf(true)
+    try {
+      const resp = await api.get(`/proyectos/${id}/documento`, { responseType: 'blob' })
+      const blob = new Blob([resp.data], { type: 'application/pdf' })
+      const url  = URL.createObjectURL(blob)
+      window.open(url, '_blank')
+      setTimeout(() => URL.revokeObjectURL(url), 60000)
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error al obtener el documento')
+    } finally {
+      setViendoPdf(false)
+    }
+  }
 
   useEffect(() => {
     api.get(`/proyectos/${id}`)
@@ -26,6 +43,7 @@ export default function CreateVersion() {
         const p = r.data?.data || r.data
         setProyectoBase(p)
         setKeepImages(p.imagenes || [])
+        setDocActual(p.documentos?.[0] || null)
         setForm({
           titulo:             p.titulo             || '',
           descripcion:        p.descripcion        || '',
@@ -159,14 +177,31 @@ export default function CreateVersion() {
         <div>
           <label className="label" style={{ display:'flex', alignItems:'center' }}>
             Documento PDF
-            <FieldHint text="Opcional. Adjunta el documento principal de esta nueva versión (máx. 10MB)." />
+            <FieldHint text="Opcional. Si no subes un PDF nuevo, se copiará el de la versión actual (si existe). Máx. 10MB." />
           </label>
+          {docActual && !documento && (
+            <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', borderRadius:12, background:'var(--surface2)', border:'1px solid var(--border)', marginBottom:8 }}>
+              <span style={{ fontSize:20 }}>📄</span>
+              <div style={{ flex:1, minWidth:0 }}>
+                <p style={{ fontSize:13, fontWeight:600, color:'var(--text-1)', margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{docActual.filename}</p>
+                <p style={{ fontSize:11, color:'var(--text-3)', margin:0 }}>
+                  {docActual.size ? `${(docActual.size / 1024).toFixed(1)} KB` : ''} · Subido {docActual.uploadDate ? new Date(docActual.uploadDate).toLocaleDateString('es-EC') : ''} · Se copiará a la nueva versión
+                </p>
+              </div>
+              <div style={{ display:'flex', gap:6 }}>
+                <button type="button" onClick={verPDF} disabled={viendoPdf}
+                  style={{ fontSize:12, fontWeight:600, color:'var(--primary)', background:'var(--primary-l)', border:'1px solid var(--primary)', borderRadius:7, padding:'4px 10px', cursor:'pointer', opacity: viendoPdf ? 0.6 : 1 }}>
+                  {viendoPdf ? '...' : 'Ver'}
+                </button>
+              </div>
+            </div>
+          )}
           {documento ? (
             <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', borderRadius:12, background:'var(--surface2)', border:'1px solid var(--primary)' }}>
               <span style={{ fontSize:20 }}>📄</span>
               <div style={{ flex:1, minWidth:0 }}>
                 <p style={{ fontSize:13, fontWeight:600, color:'var(--text-1)', margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{documento.name}</p>
-                <p style={{ fontSize:11, color:'var(--text-3)', margin:0 }}>{(documento.size / 1024).toFixed(1)} KB</p>
+                <p style={{ fontSize:11, color:'var(--text-3)', margin:0 }}>{(documento.size / 1024).toFixed(1)} KB · {docActual ? 'Reemplazará el actual' : 'Nuevo documento'}</p>
               </div>
               <button type="button" onClick={() => setDocumento(null)} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--danger)', fontSize:18, padding:'0 4px', flexShrink:0 }}>×</button>
             </div>
@@ -175,7 +210,7 @@ export default function CreateVersion() {
               style={{ border:'2px dashed var(--border2)', borderRadius:12, padding:'1rem', textAlign:'center', cursor:'pointer', background:'var(--surface2)', transition:'border-color 0.2s' }}
               onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary)'}
               onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border2)'}>
-              <p style={{ fontSize:13, color:'var(--text-3)', margin:0 }}>+ Adjuntar PDF a esta versión</p>
+              <p style={{ fontSize:13, color:'var(--text-3)', margin:0 }}>{docActual ? '🔄 Reemplazar PDF' : '+ Adjuntar PDF a esta versión'}</p>
             </div>
           )}
           <input id="pdf-version" type="file" accept="application/pdf" style={{ display:'none' }} onChange={e => {
