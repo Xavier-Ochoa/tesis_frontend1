@@ -34,14 +34,18 @@ function RejectModal({ modal, onChange, onConfirm, onClose }) {
       style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', zIndex:50, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
       <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:20, padding:'1.75rem', width:'100%', maxWidth:420, boxShadow:'var(--shadow-lg)', animation:'slideUp 0.2s ease-out' }}>
         <h2 style={{ fontFamily:'Syne,sans-serif', fontSize:18, fontWeight:800, color:'var(--text-1)', margin:'0 0 4px' }}>Rechazar proyecto</h2>
-        <p style={{ fontSize:13, color:'var(--text-3)', margin:'0 0 10px' }}>Puedes indicar el motivo del rechazo (opcional).</p>
+        <p style={{ fontSize:13, color:'var(--text-3)', margin:'0 0 10px' }}>El motivo del rechazo es <strong>obligatorio</strong>.</p>
         <div style={{ background:'var(--primary-l)', border:'1px solid var(--primary)', borderRadius:10, padding:'10px 14px', fontSize:12, color:'var(--primary)', marginBottom:'1rem', lineHeight:1.55 }}>
           ℹ️ Al rechazar, el autor podrá editarlo y volver a enviarlo para revisión.
         </div>
         <textarea value={modal.motivo} onChange={e => onChange(e.target.value)}
-          rows={3} className="input" style={{ resize:'none', marginBottom:14 }} placeholder="Motivo del rechazo..." />
+          rows={3} className="input" style={{ resize:'none', marginBottom:4 }} placeholder="Motivo del rechazo..." />
+        {!modal.motivo?.trim() && (
+          <p style={{ fontSize:11, color:'var(--danger)', margin:'0 0 14px' }}>* Este campo es obligatorio</p>
+        )}
+        {modal.motivo?.trim() && <div style={{ marginBottom:14 }} />}
         <div style={{ display:'flex', gap:10 }}>
-          <button onClick={onConfirm} className="btn-danger" style={{ flex:1 }}>Confirmar rechazo</button>
+          <button onClick={onConfirm} className="btn-danger" style={{ flex:1, opacity: modal.motivo?.trim() ? 1 : 0.5, cursor: modal.motivo?.trim() ? 'pointer' : 'not-allowed' }} disabled={!modal.motivo?.trim()}>Confirmar rechazo</button>
           <button onClick={onClose} className="btn-secondary" style={{ flex:1 }}>Cancelar</button>
         </div>
       </div>
@@ -148,6 +152,10 @@ export default function AdminProjects() {
   }
 
   const reject = async () => {
+    if (!rejectModal.motivo?.trim()) {
+      toast.error('El motivo de rechazo es obligatorio')
+      return
+    }
     try {
       await api.put(`/admin/proyectos/${rejectModal.id}/rechazar`, { motivo: rejectModal.motivo })
       toast.success('Proyecto rechazado')
