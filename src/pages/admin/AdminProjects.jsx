@@ -161,7 +161,7 @@ export default function AdminProjects() {
       toast.success('Proyecto rechazado')
       setRejectModal(null)
       fetchProjects()
-    } catch { toast.error('Error al rechazar') }
+    } catch (err) { toast.error(err.response?.data?.message || 'Error al rechazar') }
   }
 
   const desactivar = (p) => {
@@ -327,7 +327,7 @@ export default function AdminProjects() {
                           ✅ Aprobar
                         </button>
                       )}
-                      {p.estado !== 'rechazado' && (
+                      {p.estado !== 'rechazado' && p.estado !== 'aprobado' && (
                         <button onClick={() => setRejectModal({ id:p._id, motivo:'' })} style={{ padding:'4px 10px', borderRadius:6, fontSize:12, fontWeight:600, cursor:'pointer', background:'var(--danger-l)', color:'var(--danger)', border:'1px solid var(--danger)' }}>
                           ❌ Rechazar
                         </button>
