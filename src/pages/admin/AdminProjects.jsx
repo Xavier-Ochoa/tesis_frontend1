@@ -113,8 +113,11 @@ export default function AdminProjects() {
   const [filtroActivo, setFiltroActivo] = useState('true')
   const [categoria, setCategoria]   = useState('')
   const [autor, setAutor]           = useState(autorParam)
+  const [busqueda, setBusqueda]     = useState('')
+  const [busquedaInput, setBusquedaInput] = useState('')
   const [page, setPage]             = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [estadisticas, setEstadisticas] = useState(null)
   const [rejectModal, setRejectModal] = useState(null)
   const [confirmModal, setConfirmModal] = useState(null)
   const [versionesModal, setVersionesModal] = useState(null)
@@ -131,17 +134,48 @@ export default function AdminProjects() {
     try {
       const params = { page, limit:12 }
       if (filtro)       params.estado    = filtro
-      if (categoria)    params.categoria = categoria
       if (autor)        params.autor     = autor
       if (filtroActivo) params.activo    = filtroActivo
+      if (busqueda)     params.q         = busqueda
+
+      // Validación defensiva: el backend responde 400 si `categoria` no es
+      // 'academico' o 'extracurricular'. Como aquí siempre viene del <select>
+      // controlado más abajo, en teoría nunca debería ser inválida, pero se
+      // valida igual por si en el futuro se setea desde otra fuente (ej. URL).
+      if (categoria) {
+        if (!['academico', 'extracurricular'].includes(categoria)) {
+          toast.error('Categoría inválida')
+          setProjects([])
+          setLoading(false)
+          return
+        }
+        params.categoria = categoria
+      }
+
       const { data } = await api.get('/admin/proyectos', { params })
       setProjects(data.data || [])
       setTotalPages(data.pagination?.totalPages || 1)
-    } catch { setProjects([]) }
+      setEstadisticas(data.estadisticas || null)
+    } catch (err) {
+      if (err.response?.status === 400) {
+        toast.error(err.response?.data?.message || 'Categoría inválida')
+      }
+      setProjects([])
+      setEstadisticas(null)
+    }
     finally { setLoading(false) }
   }
 
-  useEffect(() => { fetchProjects() }, [page, filtro, categoria, autor, filtroActivo])
+  useEffect(() => { fetchProjects() }, [page, filtro, categoria, autor, filtroActivo, busqueda])
+
+  // Debounce simple para no disparar una request por cada tecla
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setBusqueda(busquedaInput.trim())
+      setPage(1)
+    }, 400)
+    return () => clearTimeout(t)
+  }, [busquedaInput])
 
   const approve = async (id) => {
     try {
@@ -212,7 +246,17 @@ export default function AdminProjects() {
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'1.5rem', flexWrap:'wrap', gap:12 }}>
         <div>
           <h1 style={{ fontFamily:'Syne,sans-serif', fontSize:26, fontWeight:800, color:'var(--text-1)', margin:'0 0 4px', letterSpacing:'-0.03em' }}>Gestión de Proyectos</h1>
-          <p style={{ fontSize:13, color:'var(--text-3)', margin:0 }}>{projects.length} resultado(s) · Solo proyectos enviados al admin</p>
+          <p style={{ fontSize:13, color:'var(--text-3)', margin:0 }}>
+            {projects.length} resultado(s) · Solo proyectos enviados al admin
+            {estadisticas && (
+              <span style={{ marginLeft:8 }}>
+                {typeof estadisticas.total === 'number' && <>· Total: {estadisticas.total}</>}
+                {typeof estadisticas.pendientes === 'number' && <> · Pendientes: {estadisticas.pendientes}</>}
+                {typeof estadisticas.aprobados === 'number' && <> · Aprobados: {estadisticas.aprobados}</>}
+                {typeof estadisticas.rechazados === 'number' && <> · Rechazados: {estadisticas.rechazados}</>}
+              </span>
+            )}
+          </p>
         </div>
         <Link to="/admin" className="btn-secondary btn-sm">← Admin</Link>
       </div>
@@ -241,6 +285,22 @@ export default function AdminProjects() {
           <option value="academico">Académico</option>
           <option value="extracurricular">Extracurricular</option>
         </select>
+        <input
+          type="text"
+          value={busquedaInput}
+          onChange={e => setBusquedaInput(e.target.value)}
+          placeholder="🔎 Buscar por título, autor..."
+          className="input"
+          style={{ width:220, padding:'6px 12px', fontSize:13 }}
+        />
+        {(busquedaInput || categoria) && (
+          <button
+            onClick={() => { setBusquedaInput(''); setBusqueda(''); setCategoria(''); setPage(1) }}
+            style={{ background:'none', border:'none', cursor:'pointer', color:'var(--text-3)', fontSize:12, textDecoration:'underline' }}
+          >
+            Limpiar
+          </button>
+        )}
       </div>
 
       {/* Filtro Activo/Inactivo */}
