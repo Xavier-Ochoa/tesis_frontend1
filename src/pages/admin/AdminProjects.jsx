@@ -306,7 +306,7 @@ export default function AdminProjects() {
       {/* Filtro Activo/Inactivo */}
       <div style={{ display:'flex', gap:6, marginBottom:'1.5rem', alignItems:'center' }}>
         <span style={{ fontSize:12, color:'var(--text-3)', fontWeight:600 }}>Visibilidad:</span>
-        {[['true','Activos'],['false','Inactivos'],['','Todos']].map(([v,l]) => (
+        {[['true','Activos'],['false','Inactivos'],['todos','Todos']].map(([v,l]) => (
           <button key={v} onClick={() => { setFiltroActivo(v); setPage(1) }} style={{
             padding:'5px 12px', borderRadius:100, fontSize:12, fontWeight:500, cursor:'pointer', transition:'all 0.15s',
             background: filtroActivo===v ? 'var(--text-1)' : 'var(--surface)',
