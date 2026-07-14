@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import FieldHint from '../../components/FieldHint'
 
 const MAX_IMAGENES = 5
+const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB — límite del backend para PDFs e imágenes
 const defaultForm = {
   titulo:'', descripcion:'', categoria:'academico', fechaInicio:'',
   fechaFin:'', tecnologias:'', repositorio:'', enlaceDemo:'',
@@ -30,7 +31,7 @@ function AIModal({ descripcion, onSelect, onClose }) {
       if (lista.length === 0) { setError('La IA no devolvió sugerencias. Intenta de nuevo.'); return }
       setTitulos(lista)
     } catch (err) {
-      setError(err.response?.data?.message || 'Error al conectar con la IA.')
+      setError(err.response?.data?.msg || err.response?.data?.message || 'Error al conectar con la IA.')
     } finally { setLoading(false) }
   }
 
@@ -109,6 +110,8 @@ export default function CreateProject() {
     const files = Array.from(e.target.files || [])
     const total = images.length + files.length
     if (total > MAX_IMAGENES) { toast.error(`Máximo ${MAX_IMAGENES} imágenes. Ya tienes ${images.length}.`); return }
+    const sobrepasadas = files.filter(f => f.size > MAX_FILE_SIZE)
+    if (sobrepasadas.length) { toast.error(`${sobrepasadas.length === files.length ? 'Cada imagen' : 'Algunas imágenes'} debe pesar máximo 5MB.`); return }
     const nuevas = files.slice(0, MAX_IMAGENES - images.length)
     setImages(prev => [...prev, ...nuevas])
     setPreviews(prev => [...prev, ...nuevas.map(f => URL.createObjectURL(f))])
@@ -188,7 +191,7 @@ export default function CreateProject() {
         <div>
           <label className="label" style={{ display:'flex', alignItems:'center' }}>
             Documento PDF
-            <FieldHint text="Opcional. Sube el documento principal del proyecto (máx. 10MB). Solo archivos PDF." />
+            <FieldHint text="Opcional. Sube el documento principal del proyecto (máx. 5MB). Solo archivos PDF." />
           </label>
           {documento ? (
             <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', borderRadius:12, background:'var(--surface2)', border:'1px solid var(--primary)' }}>
@@ -210,7 +213,7 @@ export default function CreateProject() {
           )}
           <input id="pdf-create" type="file" accept="application/pdf" style={{ display:'none' }} onChange={e => {
             const f = e.target.files?.[0]
-            if (f) { if (f.size > 10 * 1024 * 1024) { toast.error('El PDF no debe superar los 10MB.'); return } setDocumento(f) }
+            if (f) { if (f.size > MAX_FILE_SIZE) { toast.error('El PDF no debe superar los 5MB.'); return } setDocumento(f) }
             e.target.value = ''
           }} />
         </div>
