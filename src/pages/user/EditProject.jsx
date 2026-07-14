@@ -7,6 +7,7 @@ import FieldHint from '../../components/FieldHint'
 import toast from 'react-hot-toast'
 
 const MAX_IMAGENES = 5
+const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB — límite del backend para PDFs e imágenes
 
 export default function EditProject() {
   const { id }   = useParams()
@@ -86,6 +87,8 @@ export default function EditProject() {
     const files = Array.from(e.target.files || [])
     const total = existingImages.length + newImages.length + files.length
     if (total > MAX_IMAGENES) { toast.error(`Máximo ${MAX_IMAGENES} imágenes.`); return }
+    const sobrepasadas = files.filter(f => f.size > MAX_FILE_SIZE)
+    if (sobrepasadas.length) { toast.error(`${sobrepasadas.length === files.length ? 'Cada imagen' : 'Algunas imágenes'} debe pesar máximo 5MB.`); return }
     const nuevas = files.slice(0, MAX_IMAGENES - existingImages.length - newImages.length)
     setNewImages(prev => [...prev, ...nuevas])
     setNewPreviews(prev => [...prev, ...nuevas.map(f => URL.createObjectURL(f))])
@@ -228,7 +231,7 @@ export default function EditProject() {
         <div>
           <label className="label" style={{ display:'flex', alignItems:'center' }}>
             Documento PDF
-            <FieldHint text="Sube o reemplaza el documento principal del proyecto (máx. 10MB). Solo PDF." />
+            <FieldHint text="Sube o reemplaza el documento principal del proyecto (máx. 5MB). Solo PDF." />
           </label>
           {docActual && !nuevoDoc && (
             <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', borderRadius:12, background:'var(--surface2)', border:'1px solid var(--border)', marginBottom:8 }}>
@@ -273,7 +276,7 @@ export default function EditProject() {
           )}
           <input id="pdf-edit" type="file" accept="application/pdf" style={{ display:'none' }} onChange={e => {
             const f = e.target.files?.[0]
-            if (f) { if (f.size > 10 * 1024 * 1024) { toast.error('El PDF no debe superar los 10MB.'); return } setNuevoDoc(f) }
+            if (f) { if (f.size > MAX_FILE_SIZE) { toast.error('El PDF no debe superar los 5MB.'); return } setNuevoDoc(f) }
             e.target.value = ''
           }} />
         </div>
