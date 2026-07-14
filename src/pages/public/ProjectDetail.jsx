@@ -153,7 +153,7 @@ export default function ProjectDetail() {
       if (liked) { await api.delete(`/proyectos/${id}/like`); setLiked(false) }
       else        { await api.post(`/proyectos/${id}/like`);   setLiked(true) }
       fetchProject()
-    } catch (err) { toast.error(err.response?.data?.message || 'Error') }
+    } catch (err) { toast.error(err.response?.data?.msg || err.response?.data?.message || 'Error') }
   }
 
   const addComment = async e => {
@@ -323,13 +323,23 @@ export default function ProjectDetail() {
 
           {/* Actions */}
           <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
-            <button onClick={toggleLike} style={{
-              display:'flex', alignItems:'center', gap:6, padding:'8px 16px', borderRadius:10, fontSize:14, fontWeight:500, cursor:'pointer', transition:'all 0.15s',
-              background: liked ? 'var(--danger-l)' : 'var(--surface)', color: liked ? 'var(--danger)' : 'var(--text-2)',
-              border: `1px solid ${liked ? 'var(--danger)' : 'var(--border2)'}`,
-            }}>
-              {liked ? '❤️' : '🤍'} {likes.length} {likes.length === 1 ? 'like' : 'likes'}
-            </button>
+            {user?.rol !== 'admin' && (
+              <button onClick={toggleLike} style={{
+                display:'flex', alignItems:'center', gap:6, padding:'8px 16px', borderRadius:10, fontSize:14, fontWeight:500, cursor:'pointer', transition:'all 0.15s',
+                background: liked ? 'var(--danger-l)' : 'var(--surface)', color: liked ? 'var(--danger)' : 'var(--text-2)',
+                border: `1px solid ${liked ? 'var(--danger)' : 'var(--border2)'}`,
+              }}>
+                {liked ? '❤️' : '🤍'} {likes.length} {likes.length === 1 ? 'like' : 'likes'}
+              </button>
+            )}
+            {user?.rol === 'admin' && (
+              <span style={{
+                display:'flex', alignItems:'center', gap:6, padding:'8px 16px', borderRadius:10, fontSize:14, fontWeight:500,
+                background:'var(--surface)', color:'var(--text-3)', border:'1px solid var(--border2)',
+              }}>
+                🤍 {likes.length} {likes.length === 1 ? 'like' : 'likes'}
+              </span>
+            )}
 
             {project.repositorio && <a href={project.repositorio} target="_blank" rel="noreferrer" className="btn-secondary btn-sm">🔗 Repositorio</a>}
             {project.enlaceDemo  && <a href={project.enlaceDemo}  target="_blank" rel="noreferrer" className="btn-primary btn-sm">🚀 Demo</a>}
