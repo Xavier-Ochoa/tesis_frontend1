@@ -17,7 +17,7 @@ export default function ForgotPassword() {
       // Redirigir a la página de reset pasando el correo como state (referencia)
       navigate('/nuevo-password', { state: { email } })
     } catch (err) {
-      toast.error(err.response?.data?.msg || 'Correo no encontrado')
+      toast.error(err.response?.data?.msg || 'No se pudo procesar la solicitud. Intenta de nuevo.')
     } finally { setLoading(false) }
   }
 
