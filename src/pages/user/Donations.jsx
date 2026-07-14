@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import api from '../../api/axios'
 import toast from 'react-hot-toast'
+import { useAuth } from '../../context/AuthContext'
 
 const montos = [2, 5, 10, 20]
 
 export default function Donations() {
+  const { isAdmin } = useAuth()
   const [form, setForm] = useState({ nombre:'', mensaje:'', monto:5, paymentMethodId:'' })
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
@@ -20,9 +22,24 @@ export default function Donations() {
     } catch (err) {
       const data = err.response?.data
       if (data?.errores?.length) data.errores.forEach(e => toast.error(e.mensaje))
-      else toast.error(data?.msg || 'Error al procesar el pago')
+      else toast.error(data?.msg || data?.message || 'Error al procesar el pago')
     }
     finally { setLoading(false) }
+  }
+
+  // El backend solo permite donar a estudiante/docente
+  if (isAdmin) {
+    return (
+      <div className="page" style={{ maxWidth: 500, animation: 'slideUp 0.4s ease-out' }}>
+        <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:20, padding:'3rem 2rem', textAlign:'center', boxShadow:'var(--shadow-lg)' }}>
+          <p style={{ fontSize:44, marginBottom:12 }}>🚫</p>
+          <h2 style={{ fontFamily:'Syne,sans-serif', fontSize:20, fontWeight:800, color:'var(--text-1)', margin:'0 0 6px' }}>No disponible para administradores</h2>
+          <p style={{ fontSize:14, color:'var(--text-3)', margin:0 }}>
+            Solo cuentas de estudiante o docente pueden realizar donaciones.
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (
