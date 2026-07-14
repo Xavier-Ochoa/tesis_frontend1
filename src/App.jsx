@@ -44,7 +44,6 @@ export default function App() {
           <Route path="/nuevo-password"         element={<ResetPassword />} />
           <Route path="/nuevo-password/:token" element={<ResetPassword />} />
           <Route path="/proyectos/:id"         element={<ProjectDetail />} />
-          <Route path="/donaciones"            element={<Donations />} />
 
           {/* Protected */}
           <Route path="/dashboard"                element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -53,6 +52,7 @@ export default function App() {
           <Route path="/mis-proyectos/editar/:id"         element={<ProtectedRoute><EditProject /></ProtectedRoute>} />
           <Route path="/mis-proyectos/:id/nueva-version" element={<ProtectedRoute><CreateVersion /></ProtectedRoute>} />
           <Route path="/perfil"                   element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/donaciones"               element={<ProtectedRoute><Donations /></ProtectedRoute>} />
           <Route path="/chat"                     element={<ProtectedRoute><Navigate to="/dashboard" replace /></ProtectedRoute>} />
 
           {/* Admin */}
