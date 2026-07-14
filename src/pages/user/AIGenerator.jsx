@@ -15,7 +15,7 @@ export default function AIGenerator() {
       const { data } = await api.post('/ia/generar-titulo', { descripcion })
       setResultado(data.titulo || data.data || JSON.stringify(data))
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Error al generar. Verifica HF_API_KEY en el backend.')
+      toast.error(err.response?.data?.msg || err.response?.data?.message || 'Error al generar. Verifica HF_API_KEY en el backend.')
     } finally { setLoading(false) }
   }
 
