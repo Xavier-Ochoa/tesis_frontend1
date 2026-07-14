@@ -86,7 +86,12 @@ function ProfileTab({ user, updateUser }) {
   const [loading, setLoading] = useState(false)
 
   const handle = e => setForm({ ...form, [e.target.name]: e.target.value })
-  const handlePhoto = e => { const f = e.target.files[0]; if (!f) return; setPhoto(f); setPreview(URL.createObjectURL(f)) }
+  const handlePhoto = e => {
+    const f = e.target.files[0]
+    if (!f) return
+    if (f.size > 5 * 1024 * 1024) { toast.error('La foto no debe superar los 5MB.'); e.target.value = ''; return }
+    setPhoto(f); setPreview(URL.createObjectURL(f))
+  }
 
   const submit = async e => {
     e.preventDefault()
