@@ -66,6 +66,19 @@ function ColaboradorCard({ c, onRemove, removingId, canRemove }) {
   )
 }
 
+// Mismo criterio de edición usado en MyProjects.jsx / ProjectDetail.jsx,
+// más el estado activo/desactivado (el backend ahora valida ambos al
+// agregar/quitar colaboradores)
+function proyectoEsEditable(p) {
+  if (p.activo === false) return false
+  if (p.esUltimaVersion === false) return false
+  const env = p.enviarAlAdmin ?? false
+  const est = p.estado
+  if (!env) return est === 'pendiente' || est === 'rechazado'
+  if (env)  return est === 'rechazado'
+  return false
+}
+
 // ── Panel de colaboradores de UN proyecto (docente) ────────────────────────
 function PanelColaboradoresDocente({ proyecto, onColaboradorRemoved }) {
   const [colaboradores, setColaboradores] = useState(proyecto.colaboradores || [])
@@ -74,6 +87,7 @@ function PanelColaboradoresDocente({ proyecto, onColaboradorRemoved }) {
   const [removingId, setRemovingId]       = useState(null)
   const [showForm, setShowForm]           = useState(false)
   const [open, setOpen]                   = useState(false)
+  const editable = proyectoEsEditable(proyecto)
 
   const handleAdd = async (e) => {
     e.preventDefault()
@@ -88,7 +102,7 @@ function PanelColaboradoresDocente({ proyecto, onColaboradorRemoved }) {
       const r = await api.get(`/proyectos/${proyecto._id}/colaboradores`)
       setColaboradores(r.data?.data || [])
     } catch (err) {
-      toast.error(err.response?.data?.message || 'No se pudo agregar el colaborador')
+      toast.error(err.response?.data?.msg || err.response?.data?.message || 'No se pudo agregar el colaborador')
     } finally { setAdding(false) }
   }
 
@@ -101,7 +115,7 @@ function PanelColaboradoresDocente({ proyecto, onColaboradorRemoved }) {
       setColaboradores(prev => prev.filter(c => (c._id || c.id) !== colaboradorId))
       onColaboradorRemoved?.(proyecto._id, colaboradorId)
     } catch (err) {
-      toast.error(err.response?.data?.message || 'No se pudo remover al colaborador')
+      toast.error(err.response?.data?.msg || err.response?.data?.message || 'No se pudo remover al colaborador')
     } finally { setRemovingId(null) }
   }
 
@@ -126,15 +140,21 @@ function PanelColaboradoresDocente({ proyecto, onColaboradorRemoved }) {
 
       {open && (
         <div style={{ padding:'16px 18px', display:'flex', flexDirection:'column', gap:14, animation:'slideUp 0.2s ease-out' }}>
-          {/* Botón agregar */}
-          <div style={{ display:'flex', justifyContent:'flex-end' }}>
-            <button onClick={() => setShowForm(v => !v)} className="btn-primary btn-sm">
-              {showForm ? '✕ Cancelar' : '+ Agregar colaborador'}
-            </button>
-          </div>
+          {/* Botón agregar (solo si el proyecto es editable) */}
+          {editable ? (
+            <div style={{ display:'flex', justifyContent:'flex-end' }}>
+              <button onClick={() => setShowForm(v => !v)} className="btn-primary btn-sm">
+                {showForm ? '✕ Cancelar' : '+ Agregar colaborador'}
+              </button>
+            </div>
+          ) : (
+            <p style={{ fontSize:12, color:'var(--text-3)', margin:0, background:'var(--surface2)', border:'1px solid var(--border)', borderRadius:8, padding:'8px 12px' }}>
+              🔒 Este proyecto no está en un estado editable, así que no se pueden agregar ni remover colaboradores.
+            </p>
+          )}
 
           {/* Formulario agregar */}
-          {showForm && (
+          {editable && showForm && (
             <div style={{ background:'var(--primary-l)', border:'1px solid var(--primary)', borderRadius:12, padding:'1rem', animation:'slideUp 0.2s ease-out' }}>
               <form onSubmit={handleAdd} style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
                 <input type="email" required value={addEmail} onChange={e => setAddEmail(e.target.value)} placeholder="correo@estudiante.epn.edu.ec" className="input" style={{ margin:0, flex:1, minWidth:200 }} disabled={adding} />
@@ -155,7 +175,7 @@ function PanelColaboradoresDocente({ proyecto, onColaboradorRemoved }) {
           ) : (
             <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
               {colaboradores.map(c => (
-                <ColaboradorCard key={c._id || c.id} c={c} onRemove={handleRemove} removingId={removingId} canRemove={true} />
+                <ColaboradorCard key={c._id || c.id} c={c} onRemove={handleRemove} removingId={removingId} canRemove={editable} />
               ))}
             </div>
           )}
