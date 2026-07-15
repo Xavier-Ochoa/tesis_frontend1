@@ -74,14 +74,14 @@ export default function AdminDashboard() {
         ].map(item => (
           <Link key={item.to} to={item.to} style={{ textDecoration: 'none' }}>
             <div style={{
-              background: 'var(--surface)', border: `1px solid ${item.accent ? 'rgba(239,68,68,0.3)' : 'var(--border)'}`,
+              background: 'var(--surface)', border: '1px solid var(--border)',
               borderRadius: 14, padding: 20, transition: 'all 0.2s', cursor: 'pointer',
             }}
               onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow)' }}
               onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none' }}
             >
               <div style={{ fontSize: 24, marginBottom: 10 }}>{item.emoji}</div>
-              <p style={{ fontFamily: 'Syne, sans-serif', fontSize: 14, fontWeight: 700, color: item.accent ? '#ef4444' : 'var(--text-1)', margin: '0 0 3px' }}>{item.title}</p>
+              <p style={{ fontFamily: 'Syne, sans-serif', fontSize: 14, fontWeight: 700, color: 'var(--text-1)', margin: '0 0 3px' }}>{item.title}</p>
               <p style={{ fontSize: 12, color: 'var(--text-3)', margin: 0 }}>{item.desc}</p>
             </div>
           </Link>
