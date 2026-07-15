@@ -72,7 +72,7 @@ export default function Donations() {
                   }}>${m}</button>
                 ))}
               </div>
-              <input name="monto" type="number" min={1} value={form.monto} onChange={e => setForm({...form,monto:e.target.value})} className="input" placeholder="Otro monto" />
+              <input name="monto" type="number" min={2} value={form.monto} onChange={e => setForm({...form,monto:e.target.value})} className="input" placeholder="Otro monto" />
             </div>
             <div>
               <label className="label">Tu nombre</label>
