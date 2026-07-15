@@ -112,7 +112,12 @@ export default function AdminUsers() {
       const { data } = await api.get('/admin/estudiantes', { params })
       const lista = data.data || data.usuarios || []
       setUsers(lista)
-    } catch { setUsers([]) }
+    } catch (err) {
+      setUsers([])
+      const errores = err.response?.data?.errores
+      if (errores) errores.forEach(e => toast.error(e.mensaje))
+      else toast.error(err.response?.data?.msg || 'Error al buscar usuarios')
+    }
     finally { setLoading(false) }
   }
 
@@ -159,7 +164,7 @@ export default function AdminUsers() {
       <div style={{ display:'flex', gap:8, marginBottom:'1.25rem', flexWrap:'wrap', alignItems:'center' }}>
         <input value={search}   onChange={e => setSearch(e.target.value)}   className="input" style={{ width:180 }} placeholder="Buscar por apellido" />
         <input value={carrera}  onChange={e => setCarrera(e.target.value)}  className="input" style={{ width:220 }} placeholder="Filtrar por carrera" />
-        <input value={semestre} onChange={e => setSemestre(e.target.value)} type="number" min={1} max={8} className="input" style={{ width:110 }} placeholder="Semestre" />
+        <input value={semestre} onChange={e => setSemestre(e.target.value)} type="number" min={1} max={5} className="input" style={{ width:110 }} placeholder="Semestre" />
         <button onClick={fetchUsers} className="btn-primary btn-sm">Buscar</button>
         <button onClick={() => { setSearch(''); setCarrera(''); setSemestre(''); setTimeout(fetchUsers, 0) }} className="btn-secondary btn-sm">Limpiar</button>
       </div>
