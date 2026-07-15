@@ -250,7 +250,7 @@ export default function MyProjects() {
                       <div style={{ display:'flex', gap:12, fontSize:12, color:'var(--text-3)' }}>
                         <span>❤️ {p.likes?.length || 0}</span>
                         <span>💬 {p.comentarios?.length || 0}</span>
-                        <span>{p.carrera}</span>
+                        <span>{p.autor?.carrera}</span>
                       </div>
                       {p.estado === 'rechazado' && p.motivoRechazo && (
                         <div style={{ marginTop:6, padding:'6px 10px', background:'var(--danger-l)', border:'1px solid var(--danger)', borderRadius:8, fontSize:12, color:'var(--danger)' }}>
