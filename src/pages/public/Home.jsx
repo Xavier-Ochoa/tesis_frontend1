@@ -60,7 +60,7 @@ export default function Home() {
 
   // Init
   useEffect(() => {
-    api.get('/auth/frases').then(r => setFrase(r.data?.frase || '')).catch(() => {})
+    api.get('/auth/frases').then(r => setFrase(r.data?.q || '')).catch(() => {})
     api.get('/auth/random-image').then(r => setHeroImage(r.data?.url || r.data?.imageUrl || r.data?.image || '')).catch(() => {})
     api.get('/proyectos/destacados').then(r => setFeatured(r.data?.data || [])).catch(() => {})
   }, [])
