@@ -84,9 +84,9 @@ export default function Navbar() {
             <NavLink to="/mis-proyectos" className="nav-link" style={({ isActive }) => isActive ? { color: 'var(--primary)', background: 'var(--primary-l)' } : {}}>Mis Proyectos</NavLink>
           </>}
           {isAdmin && <>
-            <NavLink to="/admin" end className="nav-link" style={({ isActive }) => isActive ? { color: '#ef4444', background: 'rgba(239,68,68,0.08)' } : { color: '#ef4444' }}>Admin</NavLink>
-            <NavLink to="/admin/proyectos" className="nav-link" style={({ isActive }) => isActive ? { color: '#ef4444', background: 'rgba(239,68,68,0.08)' } : { color: '#ef4444' }}>Proyectos</NavLink>
-            <NavLink to="/admin/usuarios" className="nav-link" style={({ isActive }) => isActive ? { color: '#ef4444', background: 'rgba(239,68,68,0.08)' } : { color: '#ef4444' }}>Usuarios</NavLink>
+            <NavLink to="/admin" end className="nav-link" style={({ isActive }) => isActive ? { color: 'var(--primary)', background: 'var(--primary-l)' } : {}}>Admin</NavLink>
+            <NavLink to="/admin/proyectos" className="nav-link" style={({ isActive }) => isActive ? { color: 'var(--primary)', background: 'var(--primary-l)' } : {}}>Proyectos</NavLink>
+            <NavLink to="/admin/usuarios" className="nav-link" style={({ isActive }) => isActive ? { color: 'var(--primary)', background: 'var(--primary-l)' } : {}}>Usuarios</NavLink>
           </>}
         </nav>
 
@@ -181,7 +181,7 @@ export default function Navbar() {
                         display: 'flex', alignItems: 'center', gap: 10,
                         padding: '9px 16px',
                         fontSize: 13, fontWeight: 500,
-                        color: item.accent ? '#ef4444' : 'var(--text-1)',
+                        color: 'var(--text-1)',
                         textDecoration: 'none',
                         transition: 'background 0.1s',
                       }}
@@ -198,10 +198,10 @@ export default function Navbar() {
                       style={{
                         display: 'flex', alignItems: 'center', gap: 10, width: '100%',
                         padding: '9px 16px', fontSize: 13, fontWeight: 500,
-                        color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer',
+                        color: 'var(--text-1)', background: 'none', border: 'none', cursor: 'pointer',
                         transition: 'background 0.1s', textAlign: 'left',
                       }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.06)'}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--surface3)'}
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                     >
                       <span>🚪</span> Cerrar sesión
