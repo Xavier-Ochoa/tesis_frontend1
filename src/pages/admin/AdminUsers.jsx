@@ -116,7 +116,7 @@ export default function AdminUsers() {
       setUsers([])
       const errores = err.response?.data?.errores
       if (errores) errores.forEach(e => toast.error(e.mensaje))
-      else toast.error(err.response?.data?.msg || 'Error al buscar usuarios')
+      else toast.error(err.response?.data?.message || 'Error al buscar usuarios')
     }
     finally { setLoading(false) }
   }
