@@ -444,7 +444,7 @@ export default function ProjectDetail() {
             <h3 style={{ fontFamily:'Syne, sans-serif', fontSize:13, fontWeight:700, color:'var(--text-2)', margin:'0 0 12px', textTransform:'uppercase', letterSpacing:'0.08em' }}>Información</h3>
             {[
               { label: 'Autor',                value: `${project.autor?.nombre} ${project.autor?.apellido}` },
-              { label: 'Carrera',              value: project.carrera },
+              { label: 'Carrera',              value: project.autor?.carrera },
               { label: 'Categoría',            value: project.categoria },
               { label: 'Línea de Investigación', value: project.lineaInvestigacion || project.asignatura },
               { label: 'Inicio',               value: project.fechaInicio ? new Date(project.fechaInicio).toLocaleDateString() : null },
